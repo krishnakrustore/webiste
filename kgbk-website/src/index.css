@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500;600;700&display=swap");
+
+@theme {
+  /* Brand palette -- rich heritage maroon & antique gold (matches the shop's
+     own banner artwork). Navy/cyan are kept as a secondary accent tied to the
+     logo mark itself. Change these to re-theme the entire site */
+  --color-wine: #7a1a2c;
+  --color-wine-dark: #430d18;
+  --color-brown: #2b1710;
+  --color-ivory: #fbf6ea;
+  --color-offwhite: #f5eedb;
+  --color-gold: #bb8c45;
+  --color-gold-light: #ddb876;
+  --color-champagne: #efdfc0;
+  --color-beige: #e4cfa0;
+  --color-charcoal: #241a12;
+
+  --color-navy: #232a63;
+  --color-navy-dark: #11142f;
+  --color-ink: #0a0c1f;
+  --color-cyan: #0eaed4;
+  --color-cyan-light: #56d6ef;
+  --color-cyan-deep: #0b7fa1;
+
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ivory);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Thin gold thread divider -- the site's signature motif */
+.thread-line {
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold) 20%, var(--color-gold) 80%, transparent);
+  transform-origin: left center;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Gradient brand text, used sparingly on hero/section headings */
+.text-brand-gradient {
+  background: linear-gradient(100deg, var(--color-wine-dark) 8%, var(--color-wine) 45%, var(--color-gold) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Same motif, tuned for dark backgrounds so it stays legible */
+.text-brand-gradient-on-dark {
+  background: linear-gradient(100deg, var(--color-ivory) 5%, var(--color-gold-light) 60%, var(--color-gold) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Soft blurred gradient blob, dropped behind sections for depth */
+.brand-glow {
+  background: radial-gradient(closest-side, var(--color-gold) 0%, transparent 70%);
+  filter: blur(64px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Repeating diamond flourish -- signature section-break motif */
+.ornate-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.ornate-divider::before,
+.ornate-divider::after {
+  content: "";
+  height: 1px;
+  width: 3.5rem;
+  background: linear-gradient(90deg, transparent, var(--color-gold));
+}
+.ornate-divider::after {
+  background: linear-gradient(90deg, var(--color-gold), transparent);
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* subtle premium scrollbar */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--color-ivory); }
+::-webkit-scrollbar-thumb { background: var(--color-champagne); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-gold); }
