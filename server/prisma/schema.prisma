@@ -1,9 +1,10 @@
-// Local dev uses SQLite (zero-config, file-based) so this backend can be
-// built and tested immediately without waiting on cloud infra. To deploy on
-// Railway Postgres: change `provider` below to "postgresql", set
-// DATABASE_URL to the Railway connection string, then run
-// `npx prisma db push`. Schema is written to be portable between the two
-// (no native enums/arrays -- enum-like fields are plain strings validated in
+// Production (Railway) runs Postgres -- this must stay "postgresql" here
+// since this schema file is shared with the deployed backend. For local
+// dev against a real Postgres instead of sqlite, point DATABASE_URL in
+// server/.env at Railway's public Postgres connection string (Railway
+// Postgres plugin -> Variables -> DATABASE_PUBLIC_URL), then
+// `npx prisma db push`. Schema is written to be portable (no native
+// enums/arrays -- enum-like fields are plain strings validated in
 // application code, and images are a related table).
 
 generator client {
@@ -11,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
