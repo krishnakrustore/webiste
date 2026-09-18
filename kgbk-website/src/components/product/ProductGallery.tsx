@@ -35,41 +35,51 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
         ))}
       </div>
 
-      <div
-        ref={frameRef}
-        className="relative flex-1 aspect-[4/5] rounded-sm overflow-hidden bg-beige group hidden md:block"
-        style={{ cursor: "zoom-in" }}
-        onMouseEnter={() => setZooming(true)}
-        onMouseLeave={() => setZooming(false)}
-        onMouseMove={handleMouseMove}
-        onClick={() => setFullscreen(true)}
-      >
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={current?.src}
-            src={current?.src}
-            alt={current?.alt}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: zooming ? 0 : 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35 }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </AnimatePresence>
+      <div className="relative flex-1 hidden md:block">
+        <div
+          ref={frameRef}
+          className="relative aspect-[4/5] rounded-sm overflow-hidden bg-beige group"
+          style={{ cursor: "zoom-in" }}
+          onMouseEnter={() => setZooming(true)}
+          onMouseLeave={() => setZooming(false)}
+          onMouseMove={handleMouseMove}
+          onClick={() => setFullscreen(true)}
+        >
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={current?.src}
+              src={current?.src}
+              alt={current?.alt}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </AnimatePresence>
+          {zooming && (
+            <div
+              className="absolute w-24 h-24 border-2 border-ivory/90 shadow-[0_0_0_2000px_rgba(20,20,20,0.25)] pointer-events-none -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${zoomPos.x}%`, top: `${zoomPos.y}%` }}
+            />
+          )}
+          <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-ivory/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <ZoomIn size={16} className="text-charcoal" />
+          </div>
+        </div>
+
+        {/* Side zoom panel -- classic e-commerce magnifier, appears beside the image on wide screens */}
         {zooming && current && (
           <div
-            className="absolute inset-0"
+            className="hidden lg:block absolute top-0 left-[calc(100%+1.5rem)] w-full aspect-[4/5] rounded-sm overflow-hidden border border-charcoal/10 shadow-xl bg-beige z-20"
             style={{
               backgroundImage: `url(${current.src})`,
-              backgroundSize: "220%",
+              backgroundSize: "200%",
               backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
               backgroundRepeat: "no-repeat",
             }}
           />
         )}
-        <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-ivory/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <ZoomIn size={16} className="text-charcoal" />
-        </div>
       </div>
 
       {/* Mobile: plain tap-to-fullscreen image, no hover-zoom */}

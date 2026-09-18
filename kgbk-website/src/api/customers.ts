@@ -17,6 +17,7 @@ export const CustomersApi = {
   register: (input: { name: string; email: string; phone: string; password: string }) =>
     api.post<AuthResponse>("/customers/register", input),
   login: (input: { email: string; password: string }) => api.post<AuthResponse>("/customers/login", input),
+  google: (idToken: string) => api.post<AuthResponse>("/customers/google", { idToken }),
   me: () => api.get<CustomerProfile>("/customers/me", "customer"),
   myOrders: () => api.get("/customers/me/orders", "customer"),
 };

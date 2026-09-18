@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, Heart, User, ShoppingBag } from "lucide-react";
+import { Search, Menu, X, Heart, User, ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
+import { useFabricTypes } from "../../hooks/useTaxonomy";
 import SearchOverlay from "./SearchOverlay";
 import AccountMenu from "./AccountMenu";
 
@@ -23,8 +24,10 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [fabricMenuOpen, setFabricMenuOpen] = useState(false);
   const { count, open: openCart } = useCart();
   const { customer, wishlist, openAuth } = useCustomerAuth();
+  const { fabricTypes } = useFabricTypes();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,11 +64,16 @@ export default function Header() {
             <img
               src="/logo.png"
               alt="Krishna Gari Battala Kottu"
-              className="h-8 md:h-9 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
+              className="h-9 md:h-11 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
-            <span className="hidden sm:inline-block font-display text-lg md:text-xl tracking-wide text-brand-gradient whitespace-nowrap">
-              Krishna Gari Battala Kottu
+            <span className="hidden sm:flex flex-col leading-tight whitespace-nowrap">
+              <span className="font-display text-lg md:text-xl text-wine">
+                కృష్ణ గారి బట్టల కొట్టు
+              </span>
+              <span className="text-[10px] md:text-[11px] tracking-[0.15em] uppercase text-charcoal/50">
+                Krishna Gari Battala Kottu
+              </span>
             </span>
           </Link>
 
@@ -141,25 +149,74 @@ export default function Header() {
 
         {/* Category row */}
         <nav className="hidden lg:flex items-center justify-center gap-8 border-t border-charcoal/8 py-3">
-          {NAV_LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === "/"}
-              className={({ isActive }) =>
-                `text-[13px] tracking-wide font-medium transition-colors duration-300 relative py-1 ${
-                  isActive ? "text-wine" : "text-charcoal/75 hover:text-wine"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {link.label}
-                  <span className={`absolute left-0 -bottom-0.5 h-px bg-gold transition-all duration-300 ${isActive ? "w-full" : "w-0"}`} />
-                </>
-              )}
-            </NavLink>
-          ))}
+          {NAV_LINKS.map((link) =>
+            link.label === "Fabrics" ? (
+              <div
+                key={link.to}
+                className="relative"
+                onMouseEnter={() => setFabricMenuOpen(true)}
+                onMouseLeave={() => setFabricMenuOpen(false)}
+              >
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-1 text-[13px] tracking-wide font-medium transition-colors duration-300 relative py-1 ${
+                      isActive ? "text-wine" : "text-charcoal/75 hover:text-wine"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {link.label}
+                      <ChevronDown size={13} className={`transition-transform duration-300 ${fabricMenuOpen ? "rotate-180" : ""}`} />
+                      <span className={`absolute left-0 -bottom-0.5 h-px bg-gold transition-all duration-300 ${isActive ? "w-full" : "w-0"}`} />
+                    </>
+                  )}
+                </NavLink>
+                <AnimatePresence>
+                  {fabricMenuOpen && fabricTypes.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-30"
+                    >
+                      <div className="w-[560px] max-w-[80vw] rounded-xl border border-charcoal/10 bg-ivory shadow-[0_20px_48px_-16px_rgba(20,20,20,0.28)] p-5 grid grid-cols-3 gap-x-4 gap-y-1">
+                        {fabricTypes.map((f) => (
+                          <Link
+                            key={f.slug}
+                            to={`/collection?fabric=${encodeURIComponent(f.name)}`}
+                            className="text-[13px] text-charcoal/70 hover:text-wine px-2 py-1.5 rounded-md hover:bg-beige/40 transition-colors truncate"
+                          >
+                            {f.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === "/"}
+                className={({ isActive }) =>
+                  `text-[13px] tracking-wide font-medium transition-colors duration-300 relative py-1 ${
+                    isActive ? "text-wine" : "text-charcoal/75 hover:text-wine"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {link.label}
+                    <span className={`absolute left-0 -bottom-0.5 h-px bg-gold transition-all duration-300 ${isActive ? "w-full" : "w-0"}`} />
+                  </>
+                )}
+              </NavLink>
+            )
+          )}
         </nav>
       </motion.header>
 

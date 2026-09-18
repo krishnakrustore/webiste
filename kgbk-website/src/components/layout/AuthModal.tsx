@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User } from "lucide-react";
+import { X } from "lucide-react";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { ApiError } from "../../api/client";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 export default function AuthModal() {
   const { authOpen, closeAuth, login, register } = useCustomerAuth();
@@ -52,21 +53,37 @@ export default function AuthModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-ivory rounded-2xl p-6 shadow-2xl relative"
+            className="w-full max-w-sm bg-ivory rounded-2xl overflow-hidden shadow-2xl relative max-h-[92vh] overflow-y-auto"
           >
-            <button onClick={closeAuth} aria-label="Close" className="absolute top-4 right-4 text-charcoal/40 hover:text-wine">
-              <X size={18} />
+            <button onClick={closeAuth} aria-label="Close" className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-charcoal/40 text-ivory flex items-center justify-center hover:bg-charcoal/60 transition-colors">
+              <X size={16} />
             </button>
 
-            <div className="w-10 h-10 rounded-full bg-wine/10 text-wine flex items-center justify-center mb-3">
-              <User size={17} />
+            <div className="relative h-32">
+              <img
+                src="https://images.pexels.com/photos/30171215/pexels-photo-30171215.jpeg?auto=compress&cs=tinysrgb&w=800"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ivory via-ivory/20 to-charcoal/20" />
             </div>
-            <p className="font-display text-xl mb-1">{mode === "login" ? "Log In" : "Create an Account"}</p>
-            <p className="text-sm text-charcoal/55 mb-5">
-              {mode === "login" ? "Access your wishlist and order history." : "Save your wishlist and track orders faster."}
-            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-6 pt-2">
+              <p className="font-display text-xl mb-1">{mode === "login" ? "Log In" : "Create an Account"}</p>
+              <p className="text-sm text-charcoal/55 mb-5">
+                {mode === "login" ? "Access your wishlist and order history." : "Save your wishlist and track orders faster."}
+              </p>
+
+              <div className="mb-5">
+                <GoogleSignInButton />
+              </div>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="h-px flex-1 bg-charcoal/10" />
+                <span className="text-[11px] text-charcoal/40 uppercase tracking-wide">or</span>
+                <span className="h-px flex-1 bg-charcoal/10" />
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "register" && (
                 <>
                   <div>
@@ -98,7 +115,8 @@ export default function AuthModal() {
               <button onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }} className="text-wine font-medium hover:underline">
                 {mode === "login" ? "Create an account" : "Log in"}
               </button>
-            </p>
+              </p>
+            </div>
           </motion.div>
         </motion.div>
       )}

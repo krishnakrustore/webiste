@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Minus, Plus, ShoppingBag, Heart } from "lucide-react";
 import { useProduct, useProducts } from "../hooks/useProducts";
-import { useCareGuides } from "../hooks/useContent";
+import { useCareGuides, usePolicies } from "../hooks/useContent";
 import { useCart } from "../context/CartContext";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
@@ -11,7 +11,6 @@ import ProductGallery from "../components/product/ProductGallery";
 import ProductTabs, { type ProductTab } from "../components/product/ProductTabs";
 import ShareButton from "../components/ui/ShareButton";
 import ProductCard from "../components/product/ProductCard";
-import { POLICIES } from "../data/policies";
 import { BUSINESS_CONFIG } from "../config/business";
 import { slugify } from "../utils/slugify";
 
@@ -20,6 +19,7 @@ export default function ProductDetail() {
   const { product, loading } = useProduct(productSlug);
   const { products } = useProducts();
   const { careGuides } = useCareGuides();
+  const { policies } = usePolicies();
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useCustomerAuth();
   const [quantity, setQuantity] = useState(1);
@@ -27,16 +27,16 @@ export default function ProductDetail() {
   const tabs = useMemo<ProductTab[]>(() => {
     if (!product) return [];
     const matchedGuide = careGuides.find((g) => product.material.toLowerCase().includes(g.matchTerm.toLowerCase()));
-    const shipping = POLICIES["shipping-policy"];
-    const returns = POLICIES["returns-exchange"];
+    const shipping = policies.find((p) => p.slug === "shipping-policy");
+    const returns = policies.find((p) => p.slug === "returns-exchange");
 
     const list: ProductTab[] = [
       { label: "More About The Product", content: [product.description, `Pattern: ${product.pattern}`, `Colour: ${product.color}`, `Best suited for: ${product.occasion}`] },
       {
         label: "Shipping And Returns",
         content: [
-          ...shipping.sections.map((s) => s.body),
-          ...returns.sections.slice(0, 2).map((s) => s.body),
+          ...(shipping?.sections.map((s) => s.body) ?? []),
+          ...(returns?.sections.slice(0, 2).map((s) => s.body) ?? []),
         ],
       },
     ];
@@ -48,11 +48,11 @@ export default function ProductDetail() {
       content: [
         `Have a question about this piece? Message us on WhatsApp at ${BUSINESS_CONFIG.phone} and we'll help right away.`,
         `Or write to us at ${BUSINESS_CONFIG.email}.`,
-        `Visit our studio: ${BUSINESS_CONFIG.address.line1}, ${BUSINESS_CONFIG.address.line2}, ${BUSINESS_CONFIG.address.city}.`,
+        `Visit our store: ${BUSINESS_CONFIG.address.line1}, ${BUSINESS_CONFIG.address.line2}, ${BUSINESS_CONFIG.address.city}.`,
       ],
     });
     return list;
-  }, [product, careGuides]);
+  }, [product, careGuides, policies]);
 
   useDocumentMeta(
     product ? `${product.name} | Krishna Gari Battala Kottu` : "Krishna Gari Battala Kottu",

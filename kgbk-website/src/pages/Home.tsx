@@ -12,7 +12,7 @@ import WhatsAppCTA from "../components/home/WhatsAppCTA";
 export default function Home() {
   useDocumentMeta(
     "Krishna Gari Battala Kottu | Premium Fabrics & Sarees in Hyderabad",
-    "Krishna Gari Battala Kottu is a premium fabric and saree studio in Jubilee Hills, Hyderabad. Shop Banarasi, Kanchipuram silk, designer sarees and wedding collections online or enquire on WhatsApp."
+    "Krishna Gari Battala Kottu is a premium fabric and saree store in Jubilee Hills, Hyderabad. Shop Banarasi, Kanchipuram silk, designer sarees and wedding collections online or enquire on WhatsApp."
   );
 
   return (

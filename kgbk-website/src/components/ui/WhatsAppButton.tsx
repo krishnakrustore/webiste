@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { MessageCircle, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { buildWhatsAppLink } from "../../config/business";
+import WhatsAppIcon from "./WhatsAppIcon";
 import clsx from "clsx";
 
 interface Props {
@@ -39,7 +40,7 @@ export default function WhatsAppButton({
       transition={{ duration: 0.2 }}
       className={clsx(base, sizes, variants[variant], "rounded-full", className)}
     >
-      <MessageCircle size={16} className="transition-transform duration-300 group-hover:scale-110" />
+      <WhatsAppIcon size={16} className="transition-transform duration-300 group-hover:scale-110" />
       <span>{label}</span>
       {showArrow && (
         <ArrowUpRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

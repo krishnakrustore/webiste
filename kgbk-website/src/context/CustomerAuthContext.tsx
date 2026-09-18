@@ -8,6 +8,7 @@ interface CustomerAuthValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, phone: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => void;
   wishlist: Product[];
   isWishlisted: (productId: string) => boolean;
@@ -53,6 +54,13 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     setCustomer(customer);
   }
 
+  async function loginWithGoogle(idToken: string) {
+    const { token, customer } = await CustomersApi.google(idToken);
+    setCustomerToken(token);
+    setCustomer(customer);
+    setWishlist(await WishlistApi.list());
+  }
+
   function logout() {
     setCustomerToken(null);
     setCustomer(null);
@@ -89,7 +97,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   return (
     <CustomerAuthContext.Provider
       value={{
-        customer, loading, login, register, logout,
+        customer, loading, login, register, loginWithGoogle, logout,
         wishlist, isWishlisted, toggleWishlist,
         authOpen, openAuth: () => setAuthOpen(true), closeAuth: () => setAuthOpen(false),
       }}

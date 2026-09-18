@@ -29,6 +29,7 @@ import AdminOrders from "./admin/pages/AdminOrders";
 import AdminScheduleCalls from "./admin/pages/AdminScheduleCalls";
 import AdminCustomers from "./admin/pages/AdminCustomers";
 import AdminCareGuides from "./admin/pages/AdminCareGuides";
+import AdminPolicies from "./admin/pages/AdminPolicies";
 import AdminSettings from "./admin/pages/AdminSettings";
 import ProtectedRoute from "./admin/components/ProtectedRoute";
 
@@ -53,6 +54,7 @@ export default function App() {
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/track-order" element={<TrackOrder />} />
+                <Route path="/policies" element={<PolicyPage />} />
                 <Route path="/policies/:slug" element={<PolicyPage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
@@ -70,6 +72,7 @@ export default function App() {
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/customers" element={<AdminCustomers />} />
                   <Route path="/admin/care-guides" element={<AdminCareGuides />} />
+                  <Route path="/admin/policies" element={<AdminPolicies />} />
                   <Route path="/admin/schedule-calls" element={<AdminScheduleCalls />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>

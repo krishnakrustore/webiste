@@ -25,7 +25,6 @@ export default function CategoryGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55, delay: (i % 4) * 0.08 }}
-              className={i === 0 ? "col-span-2 row-span-2" : ""}
             >
               <Link to={`/collection/${cat.slug}`} className="group block relative overflow-hidden rounded-sm aspect-[3/4]">
                 <img

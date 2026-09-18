@@ -1,10 +1,13 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../db.js";
 import { signCustomerToken, requireCustomer, requireAdmin, type AuthedRequest } from "../middleware/auth.js";
 
 export const customersRouter = Router();
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const registerSchema = z.object({
   name: z.string().min(1),
@@ -38,6 +41,36 @@ customersRouter.post("/login", async (req, res) => {
 
   const valid = await bcrypt.compare(parsed.data.password, customer.passwordHash);
   if (!valid) return res.status(401).json({ error: "Incorrect email or password" });
+
+  const token = signCustomerToken(customer.id);
+  res.json({ token, customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone } });
+});
+
+const googleSchema = z.object({ idToken: z.string().min(1) });
+
+customersRouter.post("/google", async (req, res) => {
+  const parsed = googleSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Missing Google credential" });
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(501).json({ error: "Sign in with Google is not configured yet." });
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken: parsed.data.idToken, audience: process.env.GOOGLE_CLIENT_ID });
+    payload = ticket.getPayload();
+  } catch {
+    return res.status(401).json({ error: "Could not verify Google sign-in. Please try again." });
+  }
+  if (!payload?.email) return res.status(401).json({ error: "Google account has no email address." });
+
+  let customer = await prisma.customer.findUnique({ where: { email: payload.email } });
+  if (!customer) {
+    const randomHash = await bcrypt.hash(`google-oauth-${payload.sub}-${Date.now()}`, 10);
+    customer = await prisma.customer.create({
+      data: { name: payload.name ?? payload.email.split("@")[0], email: payload.email, passwordHash: randomHash },
+    });
+  }
 
   const token = signCustomerToken(customer.id);
   res.json({ token, customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone } });

@@ -14,6 +14,7 @@ import { settingsRouter } from "./routes/settings.js";
 import { customersRouter } from "./routes/customers.js";
 import { wishlistRouter } from "./routes/wishlist.js";
 import { careGuidesRouter } from "./routes/careGuides.js";
+import { policiesRouter } from "./routes/policies.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/customers", customersRouter);
 app.use("/api/wishlist", wishlistRouter);
 app.use("/api/care-guides", careGuidesRouter);
+app.use("/api/policies", policiesRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

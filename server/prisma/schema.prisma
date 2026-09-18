@@ -1,17 +1,17 @@
-// Switched to Postgres for the Railway deploy. Local dev now needs a
-// DATABASE_URL pointing at a real Postgres instance too (the cheapest path:
-// point it at the same Railway Postgres plugin the deployed backend uses, or
-// run `docker run -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres` locally).
-// Schema was written to be portable (no native enums/arrays -- enum-like
-// fields are plain strings validated in application code, and images are a
-// related table), so this was a one-line change from sqlite.
+// Local dev uses SQLite (zero-config, file-based) so this backend can be
+// built and tested immediately without waiting on cloud infra. To deploy on
+// Railway Postgres: change `provider` below to "postgresql", set
+// DATABASE_URL to the Railway connection string, then run
+// `npx prisma db push`. Schema is written to be portable between the two
+// (no native enums/arrays -- enum-like fields are plain strings validated in
+// application code, and images are a related table).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -160,6 +160,18 @@ model CareGuide {
   content   String   // one instruction per line
   position  Int      @default(0)
   createdAt DateTime @default(now())
+}
+
+model Policy {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  image        String   @default("")
+  // Array of { heading: string; body: string }, stored as JSON text for
+  // sqlite/postgres portability -- parsed in application code.
+  sectionsJson String   @default("[]")
+  position     Int      @default(0)
+  updatedAt    DateTime @updatedAt
 }
 
 model Settings {

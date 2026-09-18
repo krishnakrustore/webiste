@@ -73,10 +73,68 @@ const CARE_GUIDES = [
   },
 ];
 
+const POLICIES = [
+  {
+    slug: "payment-policy",
+    title: "Payment Policy",
+    image: pexels(6801648, "").src,
+    sections: [
+      { heading: "Accepted Payment Methods", body: "We accept UPI, credit/debit cards and net banking via Razorpay's secure checkout, as well as Cash on Delivery on eligible orders." },
+      { heading: "Payment Security", body: "We never store your card details on our servers -- all payments are processed directly by Razorpay, a PCI-DSS compliant payment gateway." },
+      { heading: "Order Confirmation", body: "Your order is confirmed once payment is successfully verified. You'll receive a confirmation on WhatsApp and email with your order details." },
+      { heading: "Failed or Pending Payments", body: "If a payment fails or stays pending, the amount (if deducted) is automatically refunded by your bank or Razorpay within 5-7 business days. Contact us if you don't see it reversed." },
+    ],
+  },
+  {
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    image: pexels(5872358, "").src,
+    sections: [
+      { heading: "Information We Collect", body: "When you place an order or contact us, we collect your name, email, phone number, and shipping address. We do not store payment card details -- these are handled directly by our payment processor, Razorpay." },
+      { heading: "How We Use It", body: "We use your information to process orders, arrange delivery, and respond to enquiries. We never sell your personal information to third parties." },
+      { heading: "Third Parties", body: "We share order details with our payment gateway (Razorpay) and shipping partner (Shiprocket) only as needed to process and deliver your order." },
+      { heading: "Contact", body: "For questions about this policy or to request your data be deleted, reach out via the contact details in our footer." },
+    ],
+  },
+  {
+    slug: "shipping-policy",
+    title: "Shipping Policy",
+    image: pexels(4386321, "").src,
+    sections: [
+      { heading: "Delivery Areas", body: "We currently ship across India. Delivery timelines vary by location, typically 4-9 business days from dispatch." },
+      { heading: "Shipping Charges", body: "Orders above ₹2,999 ship free. Orders below this qualify for a flat shipping fee, shown at checkout before you pay." },
+      { heading: "Processing Time", body: "Orders are packed and handed to our courier partner within 1-2 business days of payment confirmation." },
+      { heading: "Tracking", body: "Once dispatched, you'll receive tracking details. You can also check your order status any time on our Track Your Order page." },
+    ],
+  },
+  {
+    slug: "returns-exchange",
+    title: "Return & Exchange Policy",
+    image: pexels(5900867, "").src,
+    sections: [
+      { heading: "Eligibility", body: "Unused items in original packaging, with tags intact, can be returned or exchanged within 7 days of delivery. Custom or made-to-order pieces are not eligible." },
+      { heading: "How to Request", body: "Message us on WhatsApp or email with your order number and reason for return -- our team will guide you through the process." },
+      { heading: "Refunds", body: "Approved refunds are processed to the original payment method within 5-7 business days of us receiving the returned item." },
+      { heading: "Damaged or Incorrect Items", body: "If you receive a damaged or incorrect item, contact us within 48 hours of delivery with photos, and we'll arrange a replacement at no extra cost." },
+    ],
+  },
+  {
+    slug: "terms-of-service",
+    title: "Terms of Service",
+    image: pexels(4108715, "").src,
+    sections: [
+      { heading: "Orders", body: "By placing an order, you confirm the shipping and contact details you provide are accurate. We reserve the right to cancel orders we suspect are fraudulent." },
+      { heading: "Pricing", body: "Prices are listed in INR and may change without notice. The price at the time of your order is the price you pay." },
+      { heading: "Product Accuracy", body: "We take care to photograph and describe products accurately. Because our pieces are handwoven, minor variations in colour and weave are natural and not considered defects." },
+      { heading: "Governing Law", body: "These terms are governed by the laws of India, with courts in Hyderabad, Telangana having jurisdiction over any disputes." },
+    ],
+  },
+];
+
 const TESTIMONIALS = [
-  { name: "Priya Reddy", location: "Hyderabad", message: "Beautiful collection and the team helped me pick the perfect Kanchipuram silk for my sister's wedding. Highly recommend!", rating: 5, source: "Google" },
-  { name: "Ananya Rao", location: "Hyderabad", message: "Their Banarasi sarees are gorgeous -- true zari work, not the machine-made stuff you find everywhere else.", rating: 5, source: "Google" },
-  { name: "Sowmya K", location: "Secunderabad", message: "Personal attention, no pressure to buy, and they remembered my preferences from last visit. Lovely experience.", rating: 5, source: "Google" },
+  { name: "Priya Reddy", location: "Hyderabad", message: "Beautiful collection and the team helped me pick the perfect Kanchipuram silk for my sister's wedding. Highly recommend!", rating: 5, source: "Google", avatar: pexels(774909, "Priya Reddy", 200).src },
+  { name: "Ananya Rao", location: "Hyderabad", message: "Their Banarasi sarees are gorgeous -- true zari work, not the machine-made stuff you find everywhere else.", rating: 5, source: "Google", avatar: pexels(415829, "Ananya Rao", 200).src },
+  { name: "Sowmya K", location: "Secunderabad", message: "Personal attention, no pressure to buy, and they remembered my preferences from last visit. Lovely experience.", rating: 5, source: "Google", avatar: pexels(733872, "Sowmya K", 200).src },
 ];
 
 const PRODUCTS = [
@@ -173,11 +231,29 @@ async function main() {
     }
   }
 
+  console.log("Seeding policies...");
+  const existingPolicies = await prisma.policy.count();
+  if (existingPolicies === 0) {
+    for (const [i, p] of POLICIES.entries()) {
+      await prisma.policy.create({
+        data: { slug: p.slug, title: p.title, image: p.image, sectionsJson: JSON.stringify(p.sections), position: i },
+      });
+    }
+  }
+
   console.log("Seeding testimonials...");
   const existingTestimonials = await prisma.testimonial.count();
   if (existingTestimonials === 0) {
     for (const [i, t] of TESTIMONIALS.entries()) {
       await prisma.testimonial.create({ data: { ...t, position: i } });
+    }
+  } else {
+    // Backfill avatars onto testimonials seeded before this field was added.
+    for (const t of TESTIMONIALS) {
+      await prisma.testimonial.updateMany({
+        where: { name: t.name, avatar: null },
+        data: { avatar: t.avatar },
+      });
     }
   }
 

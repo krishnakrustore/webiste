@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { TestimonialsApi, BannersApi, CareGuidesApi, type CareGuide } from "../api/content";
+import { TestimonialsApi, BannersApi, CareGuidesApi, PoliciesApi, type CareGuide, type Policy } from "../api/content";
 import { SettingsRepository } from "../storage/SettingsRepository";
 import type { Testimonial, Banner, SiteSettings } from "../types/product";
 
@@ -52,6 +52,23 @@ export function useCareGuides() {
   }, [reload]);
 
   return { careGuides, loading, reload };
+}
+
+export function usePolicies() {
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(async () => {
+    const data = await PoliciesApi.list();
+    setPolicies(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  return { policies, loading, reload };
 }
 
 export function useSettings() {

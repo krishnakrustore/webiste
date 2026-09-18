@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Share2, MessageCircle, Link2, Check } from "lucide-react";
+import { Share2, Link2, Check } from "lucide-react";
+import WhatsAppIcon from "./WhatsAppIcon";
 
 // lucide-react no longer ships brand glyphs, so these are drawn directly.
 function FacebookIcon({ size = 15 }: { size?: number }) {
@@ -46,7 +47,7 @@ export default function ShareButton({ title }: { title: string }) {
   const links = [
     { label: "Facebook", icon: FacebookIcon, href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
     { label: "X", icon: XIcon, href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}` },
-    { label: "WhatsApp", icon: MessageCircle, href: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}` },
+    { label: "WhatsApp", icon: WhatsAppIcon, href: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}` },
   ];
 
   return (

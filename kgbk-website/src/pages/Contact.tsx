@@ -19,7 +19,7 @@ export default function Contact() {
           <div className="flex gap-4">
             <MapPin size={20} className="text-gold mt-1 shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-medium mb-1">Studio Address</p>
+              <p className="text-sm font-medium mb-1">Store Address</p>
               <p className="text-charcoal/65 leading-relaxed">
                 {BUSINESS_CONFIG.address.line1}, {BUSINESS_CONFIG.address.line2}<br />
                 {BUSINESS_CONFIG.address.city} - {BUSINESS_CONFIG.address.pincode}, {BUSINESS_CONFIG.address.state}<br />
@@ -47,7 +47,7 @@ export default function Contact() {
           <div className="flex gap-4">
             <Clock size={20} className="text-gold mt-1 shrink-0" />
             <div>
-              <p className="text-sm font-medium mb-1">Studio Hours</p>
+              <p className="text-sm font-medium mb-1">Store Hours</p>
               {BUSINESS_CONFIG.hours.map((h) => (
                 <p key={h.days} className="text-charcoal/65">{h.days}: {h.time}</p>
               ))}

@@ -54,3 +54,27 @@ export const CareGuidesApi = {
   update: (id: string, input: CareGuideInput) => api.put<CareGuide>(`/care-guides/${id}`, input, true),
   remove: (id: string) => api.delete(`/care-guides/${id}`, true),
 };
+
+export interface PolicySection {
+  heading: string;
+  body: string;
+}
+
+export interface Policy {
+  id: string;
+  slug: string;
+  title: string;
+  image: string;
+  sections: PolicySection[];
+  position: number;
+  updatedAt: string;
+}
+
+export type PolicyInput = Omit<Policy, "id" | "updatedAt">;
+
+export const PoliciesApi = {
+  list: () => api.get<Policy[]>("/policies"),
+  create: (input: PolicyInput) => api.post<Policy>("/policies", input, true),
+  update: (id: string, input: PolicyInput) => api.put<Policy>(`/policies/${id}`, input, true),
+  remove: (id: string) => api.delete(`/policies/${id}`, true),
+};

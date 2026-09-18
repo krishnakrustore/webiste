@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, PhoneCall } from "lucide-react";
+import { PhoneCall } from "lucide-react";
 import { buildWhatsAppLink, buildGeneralEnquiryMessage } from "../../config/business";
 import ScheduleCallModal from "./ScheduleCallModal";
+import WhatsAppIcon from "../ui/WhatsAppIcon";
 
 export default function FloatingActionButton() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function FloatingActionButton() {
           aria-label="Chat on WhatsApp"
           className="w-14 h-14 rounded-full bg-[#25D366] text-white shadow-[0_10px_28px_-8px_rgba(37,211,102,0.7)] flex items-center justify-center"
         >
-          <MessageCircle size={24} />
+          <WhatsAppIcon size={26} />
         </motion.a>
       </div>
 

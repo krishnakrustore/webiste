@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, Tags, Image, MessageSquareQuote, ShoppingCart, Users, PhoneCall, Shirt, Settings, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Package, Tags, Image, MessageSquareQuote, ShoppingCart, Users, PhoneCall, Shirt, FileText, Settings, LogOut, ExternalLink } from "lucide-react";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { label: "Products", to: "/admin/products", icon: Package, end: false },
   { label: "Catalogue", to: "/admin/catalogue", icon: Tags, end: false },
   { label: "Care Guides", to: "/admin/care-guides", icon: Shirt, end: false },
+  { label: "Policies", to: "/admin/policies", icon: FileText, end: false },
   { label: "Banners", to: "/admin/banners", icon: Image, end: false },
   { label: "Testimonials", to: "/admin/testimonials", icon: MessageSquareQuote, end: false },
   { label: "Schedule Calls", to: "/admin/schedule-calls", icon: PhoneCall, end: false },
