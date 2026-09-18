@@ -78,7 +78,7 @@ const POLICIES = [
   {
     slug: "payment-policy",
     title: "Payment Policy",
-    image: pexels(6801648, "").src,
+    image: pexels(6802049, "").src,
     sections: [
       { heading: "Accepted Payment Methods", body: "We accept UPI, credit/debit cards and net banking via Razorpay's secure checkout, as well as Cash on Delivery on eligible orders." },
       { heading: "Payment Security", body: "We never store your card details on our servers -- all payments are processed directly by Razorpay, a PCI-DSS compliant payment gateway." },
@@ -89,7 +89,7 @@ const POLICIES = [
   {
     slug: "privacy-policy",
     title: "Privacy Policy",
-    image: pexels(5872358, "").src,
+    image: pexels(6801648, "").src,
     sections: [
       { heading: "Information We Collect", body: "When you place an order or contact us, we collect your name, email, phone number, and shipping address. We do not store payment card details -- these are handled directly by our payment processor, Razorpay." },
       { heading: "How We Use It", body: "We use your information to process orders, arrange delivery, and respond to enquiries. We never sell your personal information to third parties." },
@@ -100,7 +100,7 @@ const POLICIES = [
   {
     slug: "shipping-policy",
     title: "Shipping Policy",
-    image: pexels(4386321, "").src,
+    image: pexels(4483610, "").src,
     sections: [
       { heading: "Delivery Areas", body: "We currently ship across India. Delivery timelines vary by location, typically 4-9 business days from dispatch." },
       { heading: "Shipping Charges", body: "Orders above ₹2,999 ship free. Orders below this qualify for a flat shipping fee, shown at checkout before you pay." },
@@ -111,7 +111,7 @@ const POLICIES = [
   {
     slug: "returns-exchange",
     title: "Return & Exchange Policy",
-    image: pexels(5900867, "").src,
+    image: pexels(5632402, "").src,
     sections: [
       { heading: "Eligibility", body: "Unused items in original packaging, with tags intact, can be returned or exchanged within 7 days of delivery. Custom or made-to-order pieces are not eligible." },
       { heading: "How to Request", body: "Message us on WhatsApp or email with your order number and reason for return -- our team will guide you through the process." },
@@ -122,7 +122,7 @@ const POLICIES = [
   {
     slug: "terms-of-service",
     title: "Terms of Service",
-    image: pexels(4108715, "").src,
+    image: pexels(4386321, "").src,
     sections: [
       { heading: "Orders", body: "By placing an order, you confirm the shipping and contact details you provide are accurate. We reserve the right to cancel orders we suspect are fraudulent." },
       { heading: "Pricing", body: "Prices are listed in INR and may change without notice. The price at the time of your order is the price you pay." },
@@ -133,7 +133,7 @@ const POLICIES = [
   {
     slug: "cancellation-policy",
     title: "Cancellation Policy",
-    image: pexels(6801647, "").src,
+    image: pexels(5025639, "").src,
     sections: [
       { heading: "Before Dispatch", body: "Orders can be cancelled free of charge any time before they're handed to our courier partner -- message us on WhatsApp with your order number." },
       { heading: "After Dispatch", body: "Once an order has shipped, it can no longer be cancelled -- you're welcome to refuse delivery or use our Return & Exchange Policy instead." },
@@ -144,7 +144,7 @@ const POLICIES = [
   {
     slug: "exchange-policy",
     title: "Exchange Policy",
-    image: pexels(6802049, "").src,
+    image: pexels(6801647, "").src,
     sections: [
       { heading: "Eligible Items", body: "Unused pieces with tags and original packaging intact can be exchanged for a different size, colour, or product within 7 days of delivery." },
       { heading: "How It Works", body: "Message us on WhatsApp with your order number and what you'd like to exchange for -- we'll confirm availability and arrange pickup of the original item." },
@@ -155,7 +155,7 @@ const POLICIES = [
   {
     slug: "faq",
     title: "Frequently Asked Questions",
-    image: pexels(5632402, "").src,
+    image: pexels(5872358, "").src,
     sections: [
       { heading: "Do you have a physical store?", body: "Yes -- visit us in Jubilee Hills, Hyderabad. Full address and hours are on our Contact page." },
       { heading: "Are your sarees handwoven?", body: "Many of our pieces are handwoven by artisan clusters we work with directly. Each product page notes the weave and material." },
@@ -267,11 +267,8 @@ async function main() {
 
   console.log("Seeding policies...");
   for (const [i, p] of POLICIES.entries()) {
-    await prisma.policy.upsert({
-      where: { slug: p.slug },
-      update: {},
-      create: { slug: p.slug, title: p.title, image: p.image, sectionsJson: JSON.stringify(p.sections), position: i },
-    });
+    const data = { slug: p.slug, title: p.title, image: p.image, sectionsJson: JSON.stringify(p.sections), position: i };
+    await prisma.policy.upsert({ where: { slug: p.slug }, update: data, create: data });
   }
 
   console.log("Seeding testimonials...");
