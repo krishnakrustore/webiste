@@ -39,13 +39,13 @@ export default function HeroSlider() {
   }, [next]);
 
   if (loading) {
-    return <section className="w-full h-[50vh] sm:h-[62vh] max-h-[560px] min-h-[340px] bg-charcoal animate-pulse" />;
+    return <section className="w-full h-[62vh] sm:h-[76vh] max-h-[680px] min-h-[420px] bg-charcoal animate-pulse" />;
   }
 
   const slide = slides[index];
 
   return (
-    <section className="relative w-full overflow-hidden bg-charcoal h-[50vh] sm:h-[62vh] max-h-[560px] min-h-[340px]">
+    <section className="relative w-full overflow-hidden bg-charcoal h-[62vh] sm:h-[76vh] max-h-[680px] min-h-[420px]">
       <AnimatePresence mode="sync">
         <motion.div
           key={index}

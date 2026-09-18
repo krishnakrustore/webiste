@@ -67,11 +67,11 @@ export default function Header() {
               className="h-9 md:h-11 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
-            <span className="hidden sm:flex flex-col leading-tight whitespace-nowrap">
-              <span className="font-display text-lg md:text-xl text-wine">
+            <span className="flex flex-col leading-tight">
+              <span className="font-display text-sm sm:text-lg md:text-xl text-wine whitespace-nowrap">
                 కృష్ణ గారి బట్టల కొట్టు
               </span>
-              <span className="text-[10px] md:text-[11px] tracking-[0.15em] uppercase text-charcoal/50">
+              <span className="text-[8px] sm:text-[10px] md:text-[11px] tracking-[0.1em] sm:tracking-[0.15em] uppercase text-charcoal/50 whitespace-nowrap">
                 Krishna Gari Battala Kottu
               </span>
             </span>

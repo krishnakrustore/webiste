@@ -27,6 +27,7 @@ const OCCASIONS = [
   { name: "Party", description: "Contemporary edits for evenings", image: pexels(15305990, "").src },
   { name: "Traditional", description: "Classic weaves, timeless technique", image: pexels(28943572, "").src },
   { name: "Contemporary", description: "Modern cuts, heritage fabric", image: pexels(6843237, "").src },
+  { name: "Mehendi", description: "Vibrant drapes for pre-wedding rituals", image: pexels(8106525, "").src },
 ];
 
 const FABRIC_TYPES = [

@@ -83,14 +83,15 @@ export default function PolicyPage() {
         </div>
       </div>
 
-      <motion.div
-        key={active.slug}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-start"
-      >
-        <div className="relative overflow-hidden rounded-sm aspect-[4/3] md:aspect-auto md:h-full md:min-h-[420px] md:sticky md:top-28 min-w-0">
+      <motion.div key={active.slug} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="text-center mb-8">
+          <h2 className="font-display text-2xl md:text-3xl mb-2">{active.title}</h2>
+          <p className="text-xs text-charcoal/40">
+            Last updated {new Date(active.updatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long" })}
+          </p>
+        </div>
+
+        <div className="relative overflow-hidden rounded-sm aspect-[21/9] md:aspect-[3/1] mb-10 max-w-4xl mx-auto">
           {active.image ? (
             <img src={active.image} alt={active.title} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
@@ -98,41 +99,34 @@ export default function PolicyPage() {
           )}
         </div>
 
-        <div className="min-w-0">
-          <h2 className="font-display text-2xl md:text-3xl mb-2">{active.title}</h2>
-          <p className="text-xs text-charcoal/40 mb-8">
-            Last updated {new Date(active.updatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long" })}
-          </p>
-
-          <div className="space-y-3">
-            {active.sections.map((s, i) => {
-              const isOpen = openIndex === i;
-              return (
-                <div key={s.heading} className="border border-charcoal/10 rounded-lg overflow-hidden bg-ivory">
-                  <button
-                    onClick={() => setOpenIndex(isOpen ? -1 : i)}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
-                  >
-                    <span className="font-display text-lg text-wine">{s.heading}</span>
-                    {isOpen ? <Minus size={16} className="text-gold shrink-0" /> : <Plus size={16} className="text-charcoal/40 shrink-0" />}
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-5 pb-5 text-charcoal/70 leading-relaxed">{s.body}</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
+        <div className="max-w-3xl mx-auto space-y-3">
+          {active.sections.map((s, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <div key={s.heading} className="border border-charcoal/10 rounded-lg overflow-hidden bg-ivory">
+                <button
+                  onClick={() => setOpenIndex(isOpen ? -1 : i)}
+                  className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+                >
+                  <span className="font-display text-lg text-wine">{s.heading}</span>
+                  {isOpen ? <Minus size={16} className="text-gold shrink-0" /> : <Plus size={16} className="text-charcoal/40 shrink-0" />}
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-5 pb-5 text-charcoal/70 leading-relaxed">{s.body}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </motion.div>
     </div>
