@@ -141,29 +141,11 @@ const POLICIES = [
       { heading: "Refund Timeline", body: "Approved cancellations are refunded to the original payment method within 5-7 business days." },
     ],
   },
-  {
-    slug: "exchange-policy",
-    title: "Exchange Policy",
-    image: pexels(6801647, "").src,
-    sections: [
-      { heading: "Eligible Items", body: "Unused pieces with tags and original packaging intact can be exchanged for a different size, colour, or product within 7 days of delivery." },
-      { heading: "How It Works", body: "Message us on WhatsApp with your order number and what you'd like to exchange for -- we'll confirm availability and arrange pickup of the original item." },
-      { heading: "Price Differences", body: "If the new item costs more, we'll share a payment link for the difference. If it costs less, the difference is refunded to your original payment method." },
-      { heading: "One Exchange Per Order", body: "Each item is eligible for one exchange. Once exchanged, the new item follows our standard Return & Exchange Policy going forward." },
-    ],
-  },
-  {
-    slug: "faq",
-    title: "Frequently Asked Questions",
-    image: pexels(5872358, "").src,
-    sections: [
-      { heading: "Do you have a physical store?", body: "Yes -- visit us in Jubilee Hills, Hyderabad. Full address and hours are on our Contact page." },
-      { heading: "Are your sarees handwoven?", body: "Many of our pieces are handwoven by artisan clusters we work with directly. Each product page notes the weave and material." },
-      { heading: "Can I customise a piece?", body: "For select fabrics and sarees, yes -- message us on WhatsApp with what you have in mind and we'll let you know what's possible." },
-      { heading: "How do I track my order?", body: "Use the Track Your Order page with your order number and email, or check the tracking link sent after dispatch." },
-    ],
-  },
 ];
+
+// Removed from the live catalogue but kept here as a record: re-adding
+// either of these later just means putting the object back above.
+const RETIRED_POLICY_SLUGS = ["exchange-policy", "faq"];
 
 const TESTIMONIALS = [
   { name: "Priya Reddy", location: "Hyderabad", message: "Beautiful collection and the team helped me pick the perfect Kanchipuram silk for my sister's wedding. Highly recommend!", rating: 5, source: "Google", avatar: pexels(774909, "Priya Reddy", 200).src },
@@ -270,6 +252,7 @@ async function main() {
     const data = { slug: p.slug, title: p.title, image: p.image, sectionsJson: JSON.stringify(p.sections), position: i };
     await prisma.policy.upsert({ where: { slug: p.slug }, update: data, create: data });
   }
+  await prisma.policy.deleteMany({ where: { slug: { in: RETIRED_POLICY_SLUGS } } });
 
   console.log("Seeding testimonials...");
   const existingTestimonials = await prisma.testimonial.count();
