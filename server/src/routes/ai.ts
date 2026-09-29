@@ -52,7 +52,10 @@ function toUpload(dataUrl: string, i: number) {
 function aiError(err: unknown) {
   if (err instanceof OpenAI.APIError) {
     if (err.status === 401) return "The OpenAI API key is invalid. Check OPENAI_API_KEY on the server.";
-    if (err.status === 429) return "OpenAI rate limit or billing limit reached. Check your OpenAI API billing and try again shortly.";
+    if (err.code === "insufficient_quota" || err.type === "insufficient_quota") {
+      return "Your OpenAI API account has no credits. Add credits at platform.openai.com > Settings > Billing (separate from a ChatGPT subscription), then try again.";
+    }
+    if (err.status === 429) return "OpenAI is rate-limiting requests right now. Wait a minute and try again.";
     if (err.status === 400) return `OpenAI rejected the request: ${err.message}`;
     return `OpenAI error (${err.status}): ${err.message}`;
   }
