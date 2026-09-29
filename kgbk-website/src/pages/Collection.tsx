@@ -1,54 +1,62 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { SlidersHorizontal, Search as SearchIcon } from "lucide-react";
 import { useProducts } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useTaxonomy";
 import ProductCard from "../components/product/ProductCard";
-import ProductFilters, { type FilterState } from "../components/product/ProductFilters";
+import ProductFilters from "../components/product/ProductFilters";
+import { EMPTY_FILTERS, inPriceRange, type FilterState } from "../components/product/filterState";
 
 export default function Collection() {
   const { categorySlug } = useParams();
   const [searchParams] = useSearchParams();
   const { products, loading } = useProducts();
   const { categories } = useCategories();
-  const [filters, setFilters] = useState<FilterState>({ category: null, fabric: null, occasion: null });
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const categoryDef = categories.find((c) => c.slug === categorySlug);
+  const occasionParam = searchParams.get("occasion");
+  const heading = categoryDef ? categoryDef.name : occasionParam ? `${occasionParam} Collection` : "All Collections";
 
   useEffect(() => {
     const fromSlug = categoryDef?.name ?? null;
     const fabricParam = searchParams.get("fabric");
     const occasionParam = searchParams.get("occasion");
-    setFilters({ category: fromSlug, fabric: fabricParam, occasion: occasionParam });
+    setFilters((f) => ({ ...f, category: fromSlug, fabric: fabricParam, occasion: occasionParam }));
     const qParam = searchParams.get("q");
     if (qParam) setQuery(qParam);
   }, [categoryDef, searchParams]);
 
   useEffect(() => {
-    document.title = `${categoryDef ? categoryDef.name : "All Collections"} | Krishna Gari Battala Kottu`;
-  }, [categoryDef]);
+    document.title = `${heading} | Krishna Gari Battala Kottu`;
+  }, [heading]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
+      if (!inPriceRange(p.price, filters.price)) return false;
       if (filters.category && p.category !== filters.category) return false;
       if (filters.fabric && p.subcategory !== filters.fabric && p.material !== filters.fabric) return false;
       if (filters.occasion && p.occasion !== filters.occasion) return false;
       if (query.trim()) {
         const q = query.toLowerCase();
-        if (!p.name.toLowerCase().includes(q) && !p.material.toLowerCase().includes(q)) return false;
+        const haystack = [p.name, p.material, p.color, p.category, p.subcategory, p.pattern, p.occasion].join(" ").toLowerCase();
+        if (!q.split(/\s+/).every((word) => haystack.includes(word))) return false;
       }
       return true;
     });
   }, [products, filters, query]);
 
+  // Wedding Collection used to be a category; old links (and search engine results) land on the occasion filter instead.
+  if (categorySlug === "wedding-collection") return <Navigate to="/collection?occasion=Wedding" replace />;
+
   return (
     <div className="max-w-[1440px] mx-auto px-5 md:px-8 py-6 md:py-10">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-5 md:mb-6">
         <p className="eyebrow text-gold mb-2">Collection</p>
-        <h1 className="font-display text-4xl md:text-5xl">{categoryDef ? categoryDef.name : "All Collections"}</h1>
+        <h1 className="font-display text-4xl md:text-5xl">{heading}</h1>
         {categoryDef && <p className="text-charcoal/60 mt-3 max-w-lg">{categoryDef.description}</p>}
       </motion.div>
 
@@ -86,7 +94,7 @@ export default function Collection() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
               <p className="font-display text-2xl mb-3">New collections are being curated</p>
               <p className="text-charcoal/55 mb-8">Please check back soon, or reach out and we&rsquo;ll help you find the right piece.</p>
-              <button onClick={() => setFilters({ category: null, fabric: null, occasion: null })} className="rounded-full border border-wine text-wine px-6 py-3 text-sm hover:bg-wine hover:text-ivory transition-colors">
+              <button onClick={() => setFilters(EMPTY_FILTERS)} className="rounded-full border border-wine text-wine px-6 py-3 text-sm hover:bg-wine hover:text-ivory transition-colors">
                 Explore Other Collections
               </button>
             </motion.div>

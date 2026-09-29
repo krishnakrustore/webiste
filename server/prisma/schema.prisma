@@ -1,11 +1,9 @@
 // Production (Railway) runs Postgres -- this must stay "postgresql" here
-// since this schema file is shared with the deployed backend. For local
-// dev against a real Postgres instead of sqlite, point DATABASE_URL in
-// server/.env at Railway's public Postgres connection string (Railway
-// Postgres plugin -> Variables -> DATABASE_PUBLIC_URL), then
-// `npx prisma db push`. Schema is written to be portable (no native
-// enums/arrays -- enum-like fields are plain strings validated in
-// application code, and images are a related table).
+// since this schema file is what the deployed backend uses. For local dev
+// on the SQLite file, run `npm run db:local` instead of editing this: it
+// writes a gitignored SQLite copy and syncs dev.db against it. Schema is
+// written to be portable (no native enums/arrays -- enum-like fields are
+// plain strings validated in application code).
 
 generator client {
   provider = "prisma-client-js"
@@ -33,6 +31,8 @@ model Product {
   occasion         String
   availability     String         @default("Available") // Available | Made to Order | Sold Out
   featured         Boolean        @default(false)
+  seoTitle         String         @default("")
+  seoDescription   String         @default("")
   images           ProductImage[]
   orderItems       OrderItem[]
   wishlistedBy     WishlistItem[]
@@ -44,9 +44,21 @@ model ProductImage {
   id        String  @id @default(cuid())
   src       String
   alt       String
+  // What the shot shows, rendered as a badge on the product page:
+  // "Catalogue" | "Blouse" | "Pallu" | "Detail" | "" (unlabelled)
+  label     String  @default("")
   position  Int     @default(0)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
+}
+
+// Uploaded/AI-generated image bytes, served from GET /api/images/:id so
+// product JSON carries a short URL instead of a multi-MB base64 string.
+model ImageAsset {
+  id        String   @id @default(cuid())
+  mime      String
+  data      Bytes
+  createdAt DateTime @default(now())
 }
 
 model Category {
@@ -55,6 +67,7 @@ model Category {
   name        String
   description String
   image       String
+  position    Int    @default(0)
 }
 
 model Occasion {
@@ -63,12 +76,14 @@ model Occasion {
   name        String
   description String
   image       String
+  position    Int    @default(0)
 }
 
 model FabricType {
-  id   String @id @default(cuid())
-  slug String @unique
-  name String
+  id       String @id @default(cuid())
+  slug     String @unique
+  name     String
+  position Int    @default(0)
 }
 
 model Testimonial {

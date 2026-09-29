@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /order-confirmation
+
+Sitemap: https://krishnagaribattalakottu.com/sitemap.xml

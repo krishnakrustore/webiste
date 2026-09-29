@@ -119,7 +119,7 @@ export default function AdminBanners() {
             </div>
             <div>
               <label className={labelClass}>Links to (optional)</label>
-              <input className={inputClass} value={link} onChange={(e) => setLink(e.target.value)} placeholder="/collection/wedding-collection" />
+              <input className={inputClass} value={link} onChange={(e) => setLink(e.target.value)} placeholder="/collection/sarees" />
             </div>
           </div>
           <button type="submit" disabled={!image || busy} className="inline-flex items-center gap-2 rounded-lg border border-wine text-wine px-5 py-2.5 text-sm font-medium hover:bg-wine hover:text-ivory transition-colors disabled:opacity-40">

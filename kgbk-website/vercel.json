@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://webiste-production-6ac2.up.railway.app/api/sitemap.xml" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

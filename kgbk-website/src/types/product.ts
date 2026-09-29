@@ -1,10 +1,14 @@
 export type Availability = "Available" | "Made to Order" | "Sold Out";
 
+export const IMAGE_LABELS = ["Catalogue", "Blouse", "Pallu", "Detail"] as const;
+export type ImageLabel = (typeof IMAGE_LABELS)[number] | "";
+
 export interface ProductImage {
   id: string;
-  /** base64 data URL when uploaded via admin, or an external URL for seed data */
+  /** Hosted URL, or a base64 data URL for a fresh upload not yet saved */
   src: string;
   alt: string;
+  label?: ImageLabel;
 }
 
 export interface Product {
@@ -24,6 +28,8 @@ export interface Product {
   occasion: string;
   availability: Availability;
   featured: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
   images: ProductImage[];
   createdAt: string;
 }

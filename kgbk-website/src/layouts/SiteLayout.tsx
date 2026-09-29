@@ -9,12 +9,27 @@ import AuthModal from "../components/layout/AuthModal";
 import TimedAuthPrompt from "../components/layout/TimedAuthPrompt";
 import Marquee from "../components/home/Marquee";
 
+const SITE_URL = "https://krishnagaribattalakottu.com";
+
 export default function SiteLayout() {
   const location = useLocation();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [location.pathname]);
+
+  // One canonical URL per page, on the real domain, ignoring tracking/search params (occasion filters are real pages).
+  useEffect(() => {
+    const occasion = new URLSearchParams(location.search).get("occasion");
+    const href = `${SITE_URL}${location.pathname}${occasion ? `?occasion=${encodeURIComponent(occasion)}` : ""}`;
+    let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "canonical";
+      document.head.appendChild(link);
+    }
+    link.href = href;
+  }, [location.pathname, location.search]);
 
   return (
     <div className="min-h-screen flex flex-col">

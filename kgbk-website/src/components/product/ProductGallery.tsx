@@ -3,6 +3,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, ZoomIn } from "lucide-react";
 import type { ProductImage } from "../../types/product";
 
+function ShotBadge({ label, small = false }: { label?: string; small?: boolean }) {
+  // The catalogue/model shot is self-explanatory; badges mark the detail shots, as on the physical tags.
+  if (!label || label === "Catalogue") return null;
+  return (
+    <span className={`absolute z-10 pointer-events-none font-bold uppercase tracking-wider bg-emerald-800/90 text-ivory rounded ${small ? "top-1 left-1 text-[8px] px-1 py-px" : "top-3 left-3 text-[11px] px-2 py-1"}`}>
+      {label}
+    </span>
+  );
+}
+
 export default function ProductGallery({ images }: { images: ProductImage[] }) {
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
@@ -31,6 +41,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
             }`}
           >
             <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+            <ShotBadge label={img.label} small />
           </button>
         ))}
       </div>
@@ -63,6 +74,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
               style={{ left: `${zoomPos.x}%`, top: `${zoomPos.y}%` }}
             />
           )}
+          <ShotBadge label={current?.label} />
           <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-ivory/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
             <ZoomIn size={16} className="text-charcoal" />
           </div>
@@ -89,6 +101,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
         className="relative flex-1 aspect-[4/5] rounded-sm overflow-hidden bg-beige md:hidden"
       >
         <img src={current?.src} alt={current?.alt} className="absolute inset-0 w-full h-full object-cover" />
+        <ShotBadge label={current?.label} />
       </button>
 
       <AnimatePresence>

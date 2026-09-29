@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "db:local": "node scripts/local-db.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",
@@ -17,8 +18,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-async-errors": "^3.1.1",
     "google-auth-library": "^11.1.0",
     "jsonwebtoken": "^9.0.2",
+    "openai": "^7.23.0",
     "razorpay": "^2.9.5",
     "zod": "^3.24.1"
   },

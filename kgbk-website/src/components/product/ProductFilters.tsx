@@ -2,11 +2,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, SlidersHorizontal } from "lucide-react";
 import { useCategories, useOccasions, useFabricTypes } from "../../hooks/useTaxonomy";
 
-export interface FilterState {
-  category: string | null;
-  fabric: string | null;
-  occasion: string | null;
-}
+import type { FilterState } from "./filterState";
+import { PRICE_RANGES } from "./filterState";
+
+export type { FilterState };
 
 interface Props {
   filters: FilterState;
@@ -46,6 +45,7 @@ function FilterBody({ filters, onChange }: Pick<Props, "filters" | "onChange">) 
   const { fabricTypes } = useFabricTypes();
   return (
     <>
+      <FilterGroup title="Price" options={PRICE_RANGES.map((r) => r.label)} active={filters.price} onSelect={(v) => onChange({ ...filters, price: v })} />
       <FilterGroup title="Category" options={categories.map((c) => c.name)} active={filters.category} onSelect={(v) => onChange({ ...filters, category: v })} />
       <FilterGroup title="Fabric" options={fabricTypes.map((f) => f.name)} active={filters.fabric} onSelect={(v) => onChange({ ...filters, fabric: v })} />
       <FilterGroup title="Occasion" options={occasions.map((o) => o.name)} active={filters.occasion} onSelect={(v) => onChange({ ...filters, occasion: v })} />

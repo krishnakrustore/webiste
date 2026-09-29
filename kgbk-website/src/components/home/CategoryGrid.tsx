@@ -17,7 +17,8 @@ export default function CategoryGrid() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        {/* Flex-wrap rather than grid so a partial last row sits centred instead of leaving a hole on the right. */}
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6">
           {categories.slice(0, 8).map((cat, i) => (
             <motion.div
               key={cat.slug}
@@ -25,6 +26,7 @@ export default function CategoryGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55, delay: (i % 4) * 0.08 }}
+              className="w-[calc(50%-0.5rem)] md:w-[calc(25%-1.125rem)]"
             >
               <Link to={`/collection/${cat.slug}`} className="group block relative overflow-hidden rounded-sm aspect-[3/4]">
                 <img

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { requireAdmin, optionalCustomer, type AuthedRequest } from "../middleware/auth.js";
+import { publicSrc } from "../utils/imageStore.js";
 
 export const ordersRouter = Router();
 
@@ -33,7 +34,10 @@ ordersRouter.post("/", optionalCustomer, async (req: AuthedRequest, res) => {
   const data = parsed.data;
 
   const productIds = data.items.map((i) => i.productId);
-  const products = await prisma.product.findMany({ where: { id: { in: productIds } }, include: { images: true } });
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    include: { images: { orderBy: { position: "asc" } } },
+  });
   if (products.length !== new Set(productIds).size) {
     return res.status(400).json({ error: "One or more items in your cart are no longer available" });
   }
@@ -45,7 +49,8 @@ ordersRouter.post("/", optionalCustomer, async (req: AuthedRequest, res) => {
       name: product.name,
       price: product.price,
       quantity: i.quantity,
-      image: product.images[0]?.src ?? null,
+      // Absolute, so the order history keeps rendering wherever it is displayed.
+      image: product.images[0] ? publicSrc(req, product.images[0].src) : null,
     };
   });
 

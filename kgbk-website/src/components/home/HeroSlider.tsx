@@ -11,7 +11,7 @@ import ban3 from "../../assets/banners/ban3.png";
 // banner -- keeps the hero from ever being empty.
 const FALLBACK_SLIDES = [
   { src: ban1, to: "/collection", alt: "Everyday collection" },
-  { src: ban2, to: "/collection/wedding-collection", alt: "Wedding collection" },
+  { src: ban2, to: "/collection?occasion=Wedding", alt: "Wedding collection" },
   { src: ban3, to: "/collection/silk-collection", alt: "Silk collection" },
 ];
 

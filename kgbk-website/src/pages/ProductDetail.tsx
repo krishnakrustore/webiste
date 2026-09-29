@@ -13,6 +13,9 @@ import ShareButton from "../components/ui/ShareButton";
 import ProductCard from "../components/product/ProductCard";
 import { BUSINESS_CONFIG } from "../config/business";
 import { slugify } from "../utils/slugify";
+import { productUrl } from "../utils/productUrl";
+
+const SITE_URL = "https://krishnagaribattalakottu.com";
 
 export default function ProductDetail() {
   const { productSlug } = useParams();
@@ -31,7 +34,15 @@ export default function ProductDetail() {
     const returns = policies.find((p) => p.slug === "returns-exchange");
 
     const list: ProductTab[] = [
-      { label: "More About The Product", content: [product.description, `Pattern: ${product.pattern}`, `Colour: ${product.color}`, `Best suited for: ${product.occasion}`] },
+      {
+        label: "More About The Product",
+        content: [
+          product.description,
+          product.pattern && `Pattern: ${product.pattern}`,
+          product.color && `Colour: ${product.color}`,
+          product.occasion && `Best suited for: ${product.occasion}`,
+        ].filter((line): line is string => Boolean(line)),
+      },
       {
         label: "Shipping And Returns",
         content: [
@@ -54,9 +65,40 @@ export default function ProductDetail() {
     return list;
   }, [product, careGuides, policies]);
 
+  const canonical = product ? `${SITE_URL}${productUrl(product)}` : undefined;
+  const hostedImages = product?.images.map((i) => i.src).filter((src) => /^https?:\/\//.test(src)) ?? [];
   useDocumentMeta(
-    product ? `${product.name} | Krishna Gari Battala Kottu` : "Krishna Gari Battala Kottu",
-    product ? `${product.shortDescription} ${product.material} ${product.category} available at Krishna Gari Battala Kottu, Hyderabad.` : undefined
+    product ? `${product.seoTitle || product.name} | Krishna Gari Battala Kottu` : "Krishna Gari Battala Kottu",
+    product
+      ? product.seoDescription || `${product.shortDescription} ${product.material} ${product.category} available at Krishna Gari Battala Kottu, Hyderabad.`
+      : undefined,
+    product
+      ? {
+          image: hostedImages[0],
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: product.seoDescription || product.shortDescription || product.description,
+            image: hostedImages,
+            sku: product.sku ?? undefined,
+            category: product.category,
+            material: product.material || undefined,
+            color: product.color || undefined,
+            brand: { "@type": "Brand", name: "Krishna Gari Battala Kottu" },
+            offers: {
+              "@type": "Offer",
+              url: canonical,
+              priceCurrency: "INR",
+              price: product.price,
+              availability: `https://schema.org/${
+                product.availability === "Sold Out" ? "OutOfStock" : product.availability === "Made to Order" ? "PreOrder" : "InStock"
+              }`,
+              seller: { "@type": "Organization", name: "Krishna Gari Battala Kottu" },
+            },
+          },
+        }
+      : undefined
   );
 
   if (loading) {
@@ -114,10 +156,11 @@ export default function ProductDetail() {
           <p className="text-charcoal/65 leading-relaxed mt-6 mb-8">{product.shortDescription}</p>
 
           <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
-            <div><p className="text-charcoal/40 text-xs mb-1">Material</p><p>{product.material}</p></div>
-            <div><p className="text-charcoal/40 text-xs mb-1">Colour</p><p>{product.color}</p></div>
-            <div><p className="text-charcoal/40 text-xs mb-1">Pattern</p><p>{product.pattern}</p></div>
-            <div><p className="text-charcoal/40 text-xs mb-1">Occasion</p><p>{product.occasion}</p></div>
+            {([["Material", product.material], ["Colour", product.color], ["Pattern", product.pattern], ["Occasion", product.occasion]] as const)
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label}><p className="text-charcoal/40 text-xs mb-1">{label}</p><p>{value}</p></div>
+              ))}
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="mb-8">

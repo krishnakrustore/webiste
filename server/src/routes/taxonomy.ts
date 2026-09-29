@@ -22,7 +22,7 @@ function makeNamedListRouter(model: "category" | "occasion" | "fabricType") {
   const hasExtraFields = model !== "fabricType";
 
   router.get("/", async (_req, res) => {
-    const items = await delegate().findMany({ orderBy: { name: "asc" } });
+    const items = await delegate().findMany({ orderBy: [{ position: "asc" }, { name: "asc" }] });
     res.json(items);
   });
 
@@ -31,7 +31,9 @@ function makeNamedListRouter(model: "category" | "occasion" | "fabricType") {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
     const { name, description, image } = parsed.data;
     const slug = slugify(name);
-    const data = hasExtraFields ? { name, slug, description, image } : { name, slug };
+    // New entries go to the end of the admin-defined order.
+    const position = await delegate().count();
+    const data = hasExtraFields ? { name, slug, description, image, position } : { name, slug, position };
     try {
       const item = await delegate().create({ data: data as never });
       res.status(201).json(item);

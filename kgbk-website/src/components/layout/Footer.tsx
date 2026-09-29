@@ -28,7 +28,7 @@ const cols = [
     links: [
       { label: "Fabrics", to: "/collection/fabrics" },
       { label: "Sarees", to: "/collection/sarees" },
-      { label: "Wedding Collection", to: "/collection/wedding-collection" },
+      { label: "Wedding", to: "/collection?occasion=Wedding" },
       { label: "All Collections", to: "/collection" },
     ],
   },

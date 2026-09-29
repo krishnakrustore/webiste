@@ -22,8 +22,8 @@ export default function Home() {
       </h1>
       <HeroSlider />
       <CategoryGrid />
-      <FeaturedFabrics />
       <OccasionGrid />
+      <FeaturedFabrics />
       <EditorialSection
         eyebrow="Signature Collection"
         title="Where Heritage Meets the Present"

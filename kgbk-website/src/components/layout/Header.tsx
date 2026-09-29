@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Menu, X, Heart, User, ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "../../context/CartContext";
@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: "Fabrics", to: "/collection/fabrics" },
   { label: "Sarees", to: "/collection/sarees" },
   { label: "Collections", to: "/collection" },
-  { label: "Wedding", to: "/collection/wedding-collection" },
+  { label: "Wedding", to: "/collection?occasion=Wedding" },
   { label: "Designer Wear", to: "/collection/designer-wear" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
@@ -29,6 +29,15 @@ export default function Header() {
   const { customer, wishlist, openAuth } = useCustomerAuth();
   const { fabricTypes } = useFabricTypes();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // NavLink ignores query strings, which would light up both "Collections" and "Wedding" on /collection?occasion=Wedding.
+  function isLinkActive(to: string) {
+    const [path, query] = to.split("?");
+    if (query) return location.pathname === path && location.search === `?${query}`;
+    if (path === "/" || path === "/collection") return location.pathname === path && !location.search.includes("occasion=");
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -59,12 +68,12 @@ export default function Header() {
         }`}
       >
         {/* Utility row: logo, search, icons */}
-        <div className="max-w-7xl mx-auto px-5 md:px-8 flex items-center gap-4 md:gap-8 py-5">
-          <Link to="/" className="flex items-center gap-2.5 leading-none group shrink-0">
+        <div className="max-w-[1440px] mx-auto px-5 md:px-8 flex md:grid md:grid-cols-[1fr_minmax(0,34rem)_1fr] items-center gap-4 md:gap-8 py-2.5 md:py-3">
+          <Link to="/" className="flex items-center gap-2.5 leading-none group shrink-0 md:justify-self-start">
             <img
               src="/logo.png"
               alt="Krishna Gari Battala Kottu"
-              className="h-9 md:h-11 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
+              className="h-9 md:h-10 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
             <span className="flex flex-col leading-tight">
@@ -77,10 +86,10 @@ export default function Header() {
             </span>
           </Link>
 
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-xl">
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex w-full">
             <div
               onClick={() => setSearchOpen(true)}
-              className="w-full flex items-center gap-2.5 bg-beige/30 border border-charcoal/10 rounded-full px-4 py-2.5 cursor-text hover:border-gold/60 transition-colors"
+              className="w-full flex items-center gap-2.5 bg-beige/30 border border-charcoal/10 rounded-full px-4 py-2 cursor-text hover:border-gold/60 transition-colors"
             >
               <Search size={16} className="text-charcoal/40 shrink-0" />
               <input
@@ -93,7 +102,7 @@ export default function Header() {
             </div>
           </form>
 
-          <div className="flex items-center gap-5 ml-auto md:ml-0">
+          <div className="flex items-center gap-5 ml-auto md:ml-0 md:justify-self-end">
             <button
               aria-label="Search"
               onClick={() => setSearchOpen(true)}
@@ -148,7 +157,7 @@ export default function Header() {
         </div>
 
         {/* Category row */}
-        <nav className="hidden lg:flex items-center justify-center gap-8 border-t border-charcoal/8 py-3">
+        <nav className="hidden lg:flex items-center justify-center gap-8 border-t border-charcoal/8 py-2">
           {NAV_LINKS.map((link) =>
             link.label === "Fabrics" ? (
               <div
@@ -198,23 +207,16 @@ export default function Header() {
                 </AnimatePresence>
               </div>
             ) : (
-              <NavLink
+              <Link
                 key={link.to}
                 to={link.to}
-                end={link.to === "/"}
-                className={({ isActive }) =>
-                  `text-[13px] tracking-wide font-medium transition-colors duration-300 relative py-1 ${
-                    isActive ? "text-wine" : "text-charcoal/75 hover:text-wine"
-                  }`
-                }
+                className={`text-[13px] tracking-wide font-medium transition-colors duration-300 relative py-1 ${
+                  isLinkActive(link.to) ? "text-wine" : "text-charcoal/75 hover:text-wine"
+                }`}
               >
-                {({ isActive }) => (
-                  <>
-                    {link.label}
-                    <span className={`absolute left-0 -bottom-0.5 h-px bg-gold transition-all duration-300 ${isActive ? "w-full" : "w-0"}`} />
-                  </>
-                )}
-              </NavLink>
+                {link.label}
+                <span className={`absolute left-0 -bottom-0.5 h-px bg-gold transition-all duration-300 ${isLinkActive(link.to) ? "w-full" : "w-0"}`} />
+              </Link>
             )
           )}
         </nav>

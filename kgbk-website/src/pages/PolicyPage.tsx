@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { usePolicies } from "../hooks/useContent";
 
 export default function PolicyPage() {
@@ -9,7 +9,6 @@ export default function PolicyPage() {
   const navigate = useNavigate();
   const { policies, loading } = usePolicies();
   const [openIndex, setOpenIndex] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const active = policies.find((p) => p.slug === slug) ?? policies[0];
 
@@ -37,86 +36,48 @@ export default function PolicyPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-5 md:px-8 py-14 md:py-20">
+    <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-16">
       <div className="mb-10 text-center">
         <p className="eyebrow text-gold mb-3">Our Policies</p>
         <h1 className="font-display text-3xl md:text-5xl">Store Policies</h1>
       </div>
 
-      {/* Mobile: dropdown selector (a sidebar column doesn't fit narrow screens) */}
-      <div className="lg:hidden mb-8 text-center">
-        <div className="relative inline-block max-w-full">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="inline-flex items-center gap-2.5 rounded-full border border-charcoal/15 bg-ivory px-6 py-3 text-sm font-medium text-wine hover:border-gold transition-colors"
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-10 lg:gap-14 items-start">
+        {/* Left: image with the policy list directly underneath it */}
+        <div className="min-w-0 lg:sticky lg:top-28">
+          <motion.div
+            key={`${active.slug}-image`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-sm aspect-[4/3]"
           >
-            {active.title}
-            <ChevronDown size={15} className={`transition-transform duration-300 ${menuOpen ? "rotate-180" : ""}`} />
-          </button>
-          <AnimatePresence>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 w-64 rounded-xl border border-charcoal/10 bg-ivory shadow-[0_16px_40px_-12px_rgba(20,20,20,0.25)] py-2 max-h-80 overflow-y-auto"
-                >
-                  {policies.map((p) => (
-                    <button
-                      key={p.slug}
-                      onClick={() => {
-                        navigate(`/policies/${p.slug}`);
-                        setMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${
-                        p.slug === active.slug ? "text-wine font-medium bg-champagne/30" : "text-charcoal/70 hover:bg-beige/40"
-                      }`}
-                    >
-                      {p.title}
-                    </button>
-                  ))}
-                </motion.div>
-              </>
+            {active.image ? (
+              <img src={active.image} alt={active.title} className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 bg-beige" />
             )}
-          </AnimatePresence>
+          </motion.div>
+
+          <nav aria-label="Store policies" className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {policies.map((p) => (
+              <button
+                key={p.slug}
+                onClick={() => navigate(`/policies/${p.slug}`)}
+                aria-current={p.slug === active.slug ? "page" : undefined}
+                className={`text-left px-3.5 py-2.5 rounded-lg text-[13px] leading-snug border transition-colors ${
+                  p.slug === active.slug
+                    ? "bg-wine text-ivory border-wine font-medium"
+                    : "border-charcoal/10 text-charcoal/75 hover:border-gold hover:text-wine"
+                }`}
+              >
+                {p.title}
+              </button>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_1fr] gap-10 lg:gap-8 items-start">
-        {/* Column 1: categories -- desktop only */}
-        <div className="hidden lg:block sticky top-28 space-y-1">
-          {policies.map((p) => (
-            <button
-              key={p.slug}
-              onClick={() => navigate(`/policies/${p.slug}`)}
-              className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors ${
-                p.slug === active.slug ? "bg-wine text-ivory font-medium" : "text-charcoal/70 hover:bg-beige/40"
-              }`}
-            >
-              {p.title}
-            </button>
-          ))}
-        </div>
-
-        {/* Column 2: image */}
-        <motion.div
-          key={`${active.slug}-image`}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="relative overflow-hidden rounded-sm aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[420px] lg:sticky lg:top-28 min-w-0"
-        >
-          {active.image ? (
-            <img src={active.image} alt={active.title} className="absolute inset-0 w-full h-full object-cover" />
-          ) : (
-            <div className="absolute inset-0 bg-beige" />
-          )}
-        </motion.div>
-
-        {/* Column 3: FAQ accordion */}
+        {/* Right: FAQ accordion */}
         <motion.div key={`${active.slug}-faq`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="min-w-0">
           <h2 className="font-display text-2xl mb-1">{active.title}</h2>
           <p className="text-xs text-charcoal/40 mb-6">

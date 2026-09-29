@@ -6,6 +6,10 @@ import { ProductRepository } from "../../storage/ProductRepository";
 import type { Availability, Product, ProductImage } from "../../types/product";
 import { useCategories, useFabricTypes, useOccasions } from "../../hooks/useTaxonomy";
 import ImageUploader from "../components/ImageUploader";
+import AiCatalogueAssistant from "../components/AiCatalogueAssistant";
+import type { AiListing } from "../../api/admin";
+import { ApiError } from "../../api/client";
+import { slugify } from "../../utils/slugify";
 
 const AVAILABILITY_OPTIONS: Availability[] = ["Available", "Made to Order", "Sold Out"];
 
@@ -24,7 +28,12 @@ const emptyForm = {
   shortDescription: "",
   description: "",
   featured: false,
+  seoTitle: "",
+  seoDescription: "",
 };
+
+const SEO_TITLE_MAX = 60;
+const SEO_DESC_MAX = 155;
 
 export default function AdminProductForm() {
   const { id } = useParams();
@@ -60,6 +69,8 @@ export default function AdminProductForm() {
           shortDescription: p.shortDescription,
           description: p.description,
           featured: p.featured,
+          seoTitle: p.seoTitle ?? "",
+          seoDescription: p.seoDescription ?? "",
         });
         setImages(p.images);
       }
@@ -80,6 +91,31 @@ export default function AdminProductForm() {
 
   function set<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function applyAi({ images: aiImages, listing }: { images: ProductImage[]; listing: AiListing | null }) {
+    // Re-applying replaces the previous AI shots instead of stacking duplicates.
+    if (aiImages.length) setImages((current) => [...aiImages, ...current.filter((img) => !img.id.startsWith("ai-"))]);
+    if (!listing) return;
+    const known = (list: { name: string }[], value: string) => (list.some((x) => x.name === value) ? value : "");
+    setForm((f) => {
+      const category = known(categories, listing.category) || f.category;
+      return {
+        ...f,
+        name: listing.name,
+        shortDescription: listing.shortDescription,
+        description: listing.description,
+        material: listing.material,
+        color: listing.color,
+        pattern: listing.pattern,
+        category,
+        subcategory: known(fabricTypes, listing.subcategory) || f.subcategory,
+        occasion: known(occasions, listing.occasion) || f.occasion,
+        priceUnit: /saree/i.test(category) ? "per piece" : f.priceUnit,
+        seoTitle: listing.seoTitle,
+        seoDescription: listing.seoDescription,
+      };
+    });
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -107,6 +143,8 @@ export default function AdminProductForm() {
         shortDescription: form.shortDescription.trim(),
         description: form.description.trim(),
         featured: form.featured,
+        seoTitle: form.seoTitle.trim(),
+        seoDescription: form.seoDescription.trim(),
         images,
       };
 
@@ -118,8 +156,8 @@ export default function AdminProductForm() {
         await ProductRepository.createProduct(payload);
       }
       navigate("/admin/products");
-    } catch {
-      setError("Something went wrong while saving. Please try again.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong while saving. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -142,6 +180,8 @@ export default function AdminProductForm() {
       <h1 className="text-2xl font-semibold mb-8">{isEdit ? "Edit Product" : "Add Product"}</h1>
 
       <motion.form initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} onSubmit={handleSubmit} className="space-y-8">
+        <AiCatalogueAssistant onApply={applyAi} defaultOpen={!isEdit} />
+
         <section className="bg-white rounded-xl border border-charcoal/5 p-6">
           <h2 className="text-sm font-semibold mb-5">Images</h2>
           <ImageUploader images={images} onChange={setImages} />
@@ -215,6 +255,32 @@ export default function AdminProductForm() {
           <div>
             <label className={labelClass}>Full Description</label>
             <textarea rows={5} className={inputClass} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Detailed product description..." />
+          </div>
+        </section>
+
+
+        <section className="bg-white rounded-xl border border-charcoal/5 p-6 space-y-5">
+          <div>
+            <h2 className="text-sm font-semibold">Search Engine Listing</h2>
+            <p className="text-xs text-charcoal/45 mt-1">How this product appears on Google. Left blank, the name and short description are used.</p>
+          </div>
+          <div>
+            <label className={labelClass}>
+              SEO Title <span className={form.seoTitle.length > SEO_TITLE_MAX ? "text-red-600" : "text-charcoal/35"}>({form.seoTitle.length}/{SEO_TITLE_MAX})</span>
+            </label>
+            <input className={inputClass} value={form.seoTitle} maxLength={70} onChange={(e) => set("seoTitle", e.target.value)} placeholder={form.name || "e.g. Black Tussar Silk Saree with Floral Zari Border"} />
+          </div>
+          <div>
+            <label className={labelClass}>
+              SEO Description <span className={form.seoDescription.length > SEO_DESC_MAX ? "text-red-600" : "text-charcoal/35"}>({form.seoDescription.length}/{SEO_DESC_MAX})</span>
+            </label>
+            <textarea rows={2} className={inputClass} value={form.seoDescription} maxLength={170} onChange={(e) => set("seoDescription", e.target.value)} placeholder={form.shortDescription || "One or two sentences with the main keywords"} />
+          </div>
+          <div className="rounded-lg border border-charcoal/10 bg-[#fafafa] p-4">
+            <p className="text-[11px] text-charcoal/40 mb-1.5">Google preview</p>
+            <p className="text-[13px] text-emerald-800 truncate">krishnagaribattalakottu.com &rsaquo; collection &rsaquo; {slugify(form.category || "category")} &rsaquo; {slugify(form.name || "product-name")}</p>
+            <p className="text-[#1a0dab] text-lg leading-snug truncate">{(form.seoTitle || form.name || "Product name")} | Krishna Gari Battala Kottu</p>
+            <p className="text-[13px] text-charcoal/65 line-clamp-2">{form.seoDescription || form.shortDescription || "Your description will appear here."}</p>
           </div>
         </section>
 

@@ -14,11 +14,15 @@ const CATEGORIES = [
   { name: "Designer Sarees", description: "Contemporary craft, modern silhouettes", image: pexels(33078836, "").src },
   { name: "Silk Collection", description: "Pure silk, woven with heritage technique", image: pexels(7232843, "").src },
   { name: "Banarasi", description: "Zari brocade from the ghats of Varanasi", image: pexels(7676881, "").src },
-  { name: "Wedding Collection", description: "Bridal edits for the biggest day", image: pexels(30171215, "").src },
   { name: "Party Wear", description: "Statement pieces for evenings out", image: pexels(15305990, "").src },
   { name: "Designer Wear", description: "Tailored, contemporary Indian fashion", image: pexels(6843237, "").src },
 ];
 
+// Wedding Collection was retired as a category -- weddings are browsed via
+// the Wedding occasion instead. Its products move to Sarees.
+const RETIRED_CATEGORIES = [{ name: "Wedding Collection", replacement: "Sarees" }];
+
+// Order here is the display order on the site (Wedding first).
 const OCCASIONS = [
   { name: "Wedding", description: "Rich weaves for the main event", image: pexels(19869152, "").src },
   { name: "Engagement", description: "Soft luxury for the promise", image: pexels(33078836, "").src },
@@ -164,13 +168,13 @@ const PRODUCTS = [
   { name: "Beige Printed Cotton Saree", category: "Sarees", subcategory: "Printed Fabrics", price: 2800, priceUnit: "per piece", material: "Cotton", color: "Beige", pattern: "Block Print", occasion: "Traditional", images: [pexels(14380626, "Beige cotton fabric close-up"), pexels(4863035, "Printed cotton textile detail"), pexels(28943572, "Woman in a printed cotton saree")] },
   { name: "Emerald Embroidered Georgette Saree", category: "Designer Sarees", subcategory: "Embroidered", price: 12400, priceUnit: "per piece", material: "Georgette", color: "Emerald", pattern: "Thread Embroidery", occasion: "Party", images: [pexels(11871835, "Emerald green embroidered fabric"), pexels(29060166, "Green woven fabric close-up"), pexels(33078836, "Woman in a designer embroidered saree")] },
   { name: "Burgundy Kanchipuram Silk Saree", category: "Silk Collection", subcategory: "Kanchipuram Silk", price: 21500, priceUnit: "per piece", material: "Kanchipuram Silk", color: "Burgundy", pattern: "Temple Border", occasion: "Wedding", featured: true, images: [pexels(4863069, "Burgundy silk saree fabric"), pexels(15305987, "Gold temple border silk detail"), pexels(30171215, "Bride in a burgundy silk saree")] },
-  { name: "Soft Beige Banarasi Saree", category: "Wedding Collection", subcategory: "Banarasi", price: 16800, priceUnit: "per piece", material: "Banarasi Silk", color: "Soft Beige", pattern: "Zari Motif", occasion: "Wedding", images: [pexels(14380623, "Soft beige Banarasi silk fabric"), pexels(7676881, "Gold zari motif fabric detail"), pexels(19869152, "Bride in traditional wedding attire")] },
+  { name: "Soft Beige Banarasi Saree", category: "Sarees", subcategory: "Banarasi", price: 16800, priceUnit: "per piece", material: "Banarasi Silk", color: "Soft Beige", pattern: "Zari Motif", occasion: "Wedding", images: [pexels(14380623, "Soft beige Banarasi silk fabric"), pexels(7676881, "Gold zari motif fabric detail"), pexels(19869152, "Bride in traditional wedding attire")] },
   { name: "Champagne Sequin Party Saree", category: "Party Wear", subcategory: "Georgette", price: 7400, priceUnit: "per piece", material: "Georgette", color: "Champagne", pattern: "Sequin", occasion: "Party", images: [pexels(10816859, "Champagne sequin georgette fabric"), pexels(15305990, "Gold sequin fabric close-up"), pexels(28943586, "Woman in a sequinned party saree")] },
   { name: "Charcoal Tissue Designer Drape", category: "Designer Wear", subcategory: "Tissue", price: 11200, priceUnit: "per piece", material: "Tissue Silk", color: "Charcoal", pattern: "Ombre", occasion: "Contemporary", images: [pexels(6843237, "Charcoal ombre tissue fabric"), pexels(5908326, "Fine textile ombre texture"), pexels(4863035, "Designer fabric close-up detail")] },
   { name: "Wine Organza Fabric", category: "Fabrics", subcategory: "Organza", price: 1850, material: "Organza", color: "Wine", pattern: "Solid", occasion: "Festive", images: [pexels(4863069, "Wine organza fabric close-up"), pexels(6276014, "Wine red organza texture"), pexels(4863035, "Sheer fabric detail")] },
   { name: "Gold Ikat Silk Saree", category: "Silk Collection", subcategory: "Ikat", price: 14600, priceUnit: "per piece", material: "Ikat Silk", color: "Gold", pattern: "Ikat Weave", occasion: "Traditional", images: [pexels(7056429, "Gold ikat silk fabric"), pexels(7232843, "Golden ikat weave detail"), pexels(28943572, "Woman in a gold silk saree")] },
   { name: "Maroon Brocade Designer Blouse Fabric", category: "Fabrics", subcategory: "Brocade", price: 1450, priceUnit: "per set", material: "Brocade", color: "Maroon", pattern: "Floral", occasion: "Wedding", images: [pexels(6276014, "Maroon brocade fabric close-up"), pexels(7676881, "Gold floral brocade detail"), pexels(6634454, "Textured brocade weave")] },
-  { name: "Ivory Embroidered Wedding Saree", category: "Wedding Collection", subcategory: "Embroidered", price: 24500, priceUnit: "per piece", material: "Silk Georgette", color: "Ivory", pattern: "Hand Embroidery", occasion: "Wedding", featured: true, images: [pexels(14380626, "Ivory hand-embroidered silk fabric"), pexels(15305987, "Gold embroidery fabric detail"), pexels(28933406, "Bride in an ivory embroidered wedding saree")] },
+  { name: "Ivory Embroidered Wedding Saree", category: "Sarees", subcategory: "Embroidered", price: 24500, priceUnit: "per piece", material: "Silk Georgette", color: "Ivory", pattern: "Hand Embroidery", occasion: "Wedding", featured: true, images: [pexels(14380626, "Ivory hand-embroidered silk fabric"), pexels(15305987, "Gold embroidery fabric detail"), pexels(28933406, "Bride in an ivory embroidered wedding saree")] },
   { name: "Beige Cotton Handloom Fabric", category: "Fabrics", subcategory: "Cotton", price: 980, material: "Handloom Cotton", color: "Beige", pattern: "Stripe", occasion: "Contemporary", images: [pexels(6634454, "Beige handloom cotton fabric"), pexels(10816859, "Natural cotton texture close-up"), pexels(5908326, "Handwoven cotton detail")] },
 ];
 
@@ -212,30 +216,35 @@ async function main() {
     console.log(`  admin user "${adminUsername}" already exists, skipping`);
   }
 
+  // Existing rows keep any admin edits to name/description/image; only the display order is synced.
   console.log("Seeding categories...");
-  for (const c of CATEGORIES) {
+  for (const [position, c] of CATEGORIES.entries()) {
     await prisma.category.upsert({
       where: { slug: slugify(c.name) },
-      update: {},
-      create: { ...c, slug: slugify(c.name) },
+      update: { position },
+      create: { ...c, slug: slugify(c.name), position },
     });
+  }
+  for (const { name, replacement } of RETIRED_CATEGORIES) {
+    await prisma.product.updateMany({ where: { category: name }, data: { category: replacement } });
+    await prisma.category.deleteMany({ where: { slug: slugify(name) } });
   }
 
   console.log("Seeding occasions...");
-  for (const o of OCCASIONS) {
+  for (const [position, o] of OCCASIONS.entries()) {
     await prisma.occasion.upsert({
       where: { slug: slugify(o.name) },
-      update: {},
-      create: { ...o, slug: slugify(o.name) },
+      update: { position },
+      create: { ...o, slug: slugify(o.name), position },
     });
   }
 
   console.log("Seeding fabric types...");
-  for (const name of FABRIC_TYPES) {
+  for (const [position, name] of FABRIC_TYPES.entries()) {
     await prisma.fabricType.upsert({
       where: { slug: slugify(name) },
-      update: {},
-      create: { name, slug: slugify(name) },
+      update: { position },
+      create: { name, slug: slugify(name), position },
     });
   }
 
