@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { User, Heart, Package, LogOut } from "lucide-react";
+import { User, Heart, LogOut } from "lucide-react";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 
 export default function AccountMenu() {
@@ -43,9 +43,6 @@ export default function AccountMenu() {
             </div>
             <Link to="/wishlist" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-charcoal/75 hover:bg-beige/40 hover:text-wine transition-colors">
               <Heart size={14} /> Wishlist
-            </Link>
-            <Link to="/track-order" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-charcoal/75 hover:bg-beige/40 hover:text-wine transition-colors">
-              <Package size={14} /> My Orders
             </Link>
             <button onClick={() => { logout(); setOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-charcoal/75 hover:bg-beige/40 hover:text-wine transition-colors border-t border-charcoal/8">
               <LogOut size={14} /> Log Out

@@ -5,11 +5,11 @@ import { ApiError } from "../../api/client";
 import type { ProductImage } from "../../types/product";
 import { compressImage } from "../../utils/image";
 
-const SHOTS: AiShot[] = ["Catalogue", "Blouse", "Pallu"];
+const SHOTS: AiShot[] = ["Catalogue", "Detail", "Pallu"];
 const SHOT_HINT: Record<AiShot, string> = {
-  Catalogue: "Model wearing the saree",
-  Blouse: "Blouse piece, folded flat",
-  Pallu: "Pallu spread flat",
+  Catalogue: "Draped on a mannequin",
+  Detail: "Folded: body, border & pallu",
+  Pallu: "Pleats with the pallu spread",
 };
 const MAX_PHOTOS = 10;
 
@@ -28,7 +28,7 @@ SEO description: (140-155 characters)`;
 type ShotState = { src?: string; loading: boolean; error?: string; include: boolean };
 const emptyShots = (): Record<AiShot, ShotState> => ({
   Catalogue: { loading: false, include: true },
-  Blouse: { loading: false, include: true },
+  Detail: { loading: false, include: true },
   Pallu: { loading: false, include: true },
 });
 
@@ -105,7 +105,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
 
   function apply() {
     const d = listing.data;
-    const altFor: Record<AiShot, string | undefined> = { Catalogue: d?.altCatalogue, Blouse: d?.altBlouse, Pallu: d?.altPallu };
+    const altFor: Record<AiShot, string | undefined> = { Catalogue: d?.altCatalogue, Detail: d?.altDetail, Pallu: d?.altPallu };
     const images: ProductImage[] = SHOTS.filter((k) => shots[k].src && shots[k].include).map((k) => ({
       id: `ai-${k}-${Date.now()}`,
       src: shots[k].src!,
@@ -129,7 +129,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
           <span className="w-8 h-8 rounded-lg bg-wine text-ivory flex items-center justify-center"><Sparkles size={15} /></span>
           <span>
             <span className="block text-sm font-semibold">AI Catalogue Assistant</span>
-            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; model shot, blouse, pallu and a full SEO listing out</span>
+            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; mannequin, fold and pallu shots plus a full SEO listing out</span>
           </span>
         </span>
         <ChevronDown size={16} className={`text-charcoal/40 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -270,7 +270,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
                       <Check size={15} /> Use in product form
                     </button>
                     <span className="text-xs text-charcoal/50">
-                      {applied ? "Added below -- review, set the price and save." : "Fills the fields below; you can still edit everything before saving."}
+                      {applied ? "Added below -- review the details and save." : "Fills the fields below; review everything before saving."}
                     </span>
                   </div>
                 </>

@@ -6,7 +6,7 @@ import { useProducts } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useTaxonomy";
 import ProductCard from "../components/product/ProductCard";
 import ProductFilters from "../components/product/ProductFilters";
-import { EMPTY_FILTERS, inPriceRange, type FilterState } from "../components/product/filterState";
+import { EMPTY_FILTERS, type FilterState } from "../components/product/filterState";
 
 export default function Collection() {
   const { categorySlug } = useParams();
@@ -36,7 +36,6 @@ export default function Collection() {
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
-      if (!inPriceRange(p.price, filters.price)) return false;
       if (filters.category && p.category !== filters.category) return false;
       if (filters.fabric && p.subcategory !== filters.fabric && p.material !== filters.fabric) return false;
       if (filters.occasion && p.occasion !== filters.occasion) return false;

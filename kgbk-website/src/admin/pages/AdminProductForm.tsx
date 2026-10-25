@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save } from "lucide-react";
 import { ProductRepository } from "../../storage/ProductRepository";
-import type { Availability, Product, ProductImage } from "../../types/product";
+import type { Availability, Product, ProductImage, ProductStatus } from "../../types/product";
 import { useCategories, useFabricTypes, useOccasions } from "../../hooks/useTaxonomy";
 import ImageUploader from "../components/ImageUploader";
 import AiCatalogueAssistant from "../components/AiCatalogueAssistant";
@@ -18,13 +18,12 @@ const emptyForm = {
   sku: "",
   category: "",
   subcategory: "",
-  price: "",
-  priceUnit: "per metre",
   material: "",
   color: "",
   pattern: "",
   occasion: "",
   availability: "Available" as Availability,
+  status: "published" as ProductStatus,
   shortDescription: "",
   description: "",
   featured: false,
@@ -59,13 +58,12 @@ export default function AdminProductForm() {
           sku: p.sku ?? "",
           category: p.category,
           subcategory: p.subcategory,
-          price: String(p.price),
-          priceUnit: p.priceUnit,
           material: p.material,
           color: p.color,
           pattern: p.pattern,
           occasion: p.occasion,
           availability: p.availability,
+          status: p.status ?? "published",
           shortDescription: p.shortDescription,
           description: p.description,
           featured: p.featured,
@@ -111,7 +109,6 @@ export default function AdminProductForm() {
         category,
         subcategory: known(fabricTypes, listing.subcategory) || f.subcategory,
         occasion: known(occasions, listing.occasion) || f.occasion,
-        priceUnit: /saree/i.test(category) ? "per piece" : f.priceUnit,
         seoTitle: listing.seoTitle,
         seoDescription: listing.seoDescription,
       };
@@ -123,7 +120,6 @@ export default function AdminProductForm() {
     setError("");
 
     if (!form.name.trim()) { setError("Product name is required."); return; }
-    if (!form.price || Number.isNaN(Number(form.price))) { setError("A valid price is required."); return; }
     if (images.length === 0) { setError("Please add at least one product image."); return; }
 
     setSaving(true);
@@ -133,13 +129,12 @@ export default function AdminProductForm() {
         sku: form.sku.trim() || null,
         category: form.category,
         subcategory: form.subcategory.trim(),
-        price: Number(form.price),
-        priceUnit: form.priceUnit.trim() || "per metre",
         material: form.material.trim(),
         color: form.color.trim(),
         pattern: form.pattern.trim(),
         occasion: form.occasion,
         availability: form.availability,
+        status: form.status,
         shortDescription: form.shortDescription.trim(),
         description: form.description.trim(),
         featured: form.featured,
@@ -210,14 +205,6 @@ export default function AdminProductForm() {
             </select>
           </div>
           <div>
-            <label className={labelClass}>Price (&#8377;)</label>
-            <input type="number" min="0" className={inputClass} value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="2450" />
-          </div>
-          <div>
-            <label className={labelClass}>Price Unit</label>
-            <input className={inputClass} value={form.priceUnit} onChange={(e) => set("priceUnit", e.target.value)} placeholder="per metre / per piece" />
-          </div>
-          <div>
             <label className={labelClass}>Material</label>
             <input className={inputClass} value={form.material} onChange={(e) => set("material", e.target.value)} placeholder="Banarasi Silk" />
           </div>
@@ -239,6 +226,13 @@ export default function AdminProductForm() {
             <label className={labelClass}>Availability</label>
             <select className={inputClass} value={form.availability} onChange={(e) => set("availability", e.target.value as Availability)}>
               {AVAILABILITY_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Visibility</label>
+            <select className={inputClass} value={form.status} onChange={(e) => set("status", e.target.value as ProductStatus)}>
+              <option value="published">Published -- visible on the website</option>
+              <option value="draft">Draft -- hidden, still being reviewed</option>
             </select>
           </div>
           <div className="flex items-center gap-2.5 pt-6">

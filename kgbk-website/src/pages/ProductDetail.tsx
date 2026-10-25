@@ -1,17 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Minus, Plus, ShoppingBag, Heart } from "lucide-react";
+import { ChevronRight, Heart } from "lucide-react";
 import { useProduct, useProducts } from "../hooks/useProducts";
 import { useCareGuides, usePolicies } from "../hooks/useContent";
-import { useCart } from "../context/CartContext";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import ProductGallery from "../components/product/ProductGallery";
 import ProductTabs, { type ProductTab } from "../components/product/ProductTabs";
 import ShareButton from "../components/ui/ShareButton";
 import ProductCard from "../components/product/ProductCard";
-import { BUSINESS_CONFIG } from "../config/business";
+import { BUSINESS_CONFIG, buildWhatsAppLink, buildProductEnquiryMessage } from "../config/business";
+import WhatsAppIcon from "../components/ui/WhatsAppIcon";
 import { slugify } from "../utils/slugify";
 import { productUrl } from "../utils/productUrl";
 
@@ -23,9 +23,7 @@ export default function ProductDetail() {
   const { products } = useProducts();
   const { careGuides } = useCareGuides();
   const { policies } = usePolicies();
-  const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useCustomerAuth();
-  const [quantity, setQuantity] = useState(1);
 
   const tabs = useMemo<ProductTab[]>(() => {
     if (!product) return [];
@@ -86,16 +84,7 @@ export default function ProductDetail() {
             material: product.material || undefined,
             color: product.color || undefined,
             brand: { "@type": "Brand", name: "Krishna Gari Battala Kottu" },
-            offers: {
-              "@type": "Offer",
-              url: canonical,
-              priceCurrency: "INR",
-              price: product.price,
-              availability: `https://schema.org/${
-                product.availability === "Sold Out" ? "OutOfStock" : product.availability === "Made to Order" ? "PreOrder" : "InStock"
-              }`,
-              seller: { "@type": "Organization", name: "Krishna Gari Battala Kottu" },
-            },
+            url: canonical,
           },
         }
       : undefined
@@ -146,9 +135,6 @@ export default function ProductDetail() {
             <ShareButton title={product.name} />
           </div>
           <h1 className="font-display text-3xl md:text-4xl leading-tight mb-3">{product.name}</h1>
-          <p className="text-2xl text-wine font-medium mb-3">
-            &#8377;{product.price.toLocaleString("en-IN")} <span className="text-base text-charcoal/45 font-normal">{product.priceUnit}</span>
-          </p>
           <p className={`text-xs inline-block px-2.5 py-1 rounded-full ${product.availability === "Available" ? "bg-green-800/10 text-green-800" : "bg-charcoal/10 text-charcoal/60"}`}>
             {product.availability}
           </p>
@@ -165,22 +151,14 @@ export default function ProductDetail() {
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="mb-8">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center border border-charcoal/15 rounded-full">
-                <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="p-3 hover:text-wine" aria-label="Decrease quantity">
-                  <Minus size={14} />
-                </button>
-                <span className="text-sm w-8 text-center">{quantity}</span>
-                <button onClick={() => setQuantity((q) => q + 1)} className="p-3 hover:text-wine" aria-label="Increase quantity">
-                  <Plus size={14} />
-                </button>
-              </div>
-              <button
-                onClick={() => addItem(product, quantity)}
-                disabled={product.availability === "Sold Out"}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-wine text-ivory px-8 py-4 text-sm font-medium hover:bg-wine-dark transition-colors disabled:opacity-50"
+              <a
+                href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, url: canonical ?? window.location.href }))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] text-white px-8 py-4 text-sm font-medium hover:brightness-95 transition"
               >
-                <ShoppingBag size={16} /> {product.availability === "Sold Out" ? "Sold Out" : "Add to Cart"}
-              </button>
+                <WhatsAppIcon size={17} /> Enquire on WhatsApp for price
+              </a>
               <button
                 onClick={() => toggleWishlist(product)}
                 aria-label={isWishlisted(product.id) ? "Remove from wishlist" : "Add to wishlist"}

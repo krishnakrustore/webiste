@@ -30,14 +30,17 @@ export function assetIdOf(src: string): string | null {
 
 export async function deleteUnusedAssets(previous: string[], next: string[]) {
   const keep = new Set(next.map(assetIdOf).filter(Boolean));
-  const candidates = previous.map(assetIdOf).filter((id): id is string => Boolean(id) && !keep.has(id));
-  const drop: string[] = [];
-  for (const id of candidates) {
-    // Past orders keep a copy of the product's first image URL -- don't break their thumbnails.
-    const usedByOrder = await prisma.orderItem.findFirst({ where: { image: { endsWith: `${PREFIX}${id}` } }, select: { id: true } });
-    if (!usedByOrder) drop.push(id);
-  }
+  const drop = previous.map(assetIdOf).filter((id): id is string => Boolean(id) && !keep.has(id));
   if (drop.length) await prisma.imageAsset.deleteMany({ where: { id: { in: drop } } });
+}
+
+/** Loads a stored image back as a data URL (for sending to the AI). */
+export async function readAsDataUrl(src: string): Promise<string> {
+  const id = assetIdOf(src);
+  if (!id) throw new Error(`Not a stored image: ${src}`);
+  const asset = await prisma.imageAsset.findUnique({ where: { id } });
+  if (!asset) throw new Error("A source photo is missing from storage");
+  return `data:${asset.mime};base64,${Buffer.from(asset.data).toString("base64")}`;
 }
 
 function apiOrigin(req: Request): string {

@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import FloatingActionButton from "../components/layout/FloatingActionButton";
-import CartDrawer from "../components/layout/CartDrawer";
 import AuthModal from "../components/layout/AuthModal";
 import TimedAuthPrompt from "../components/layout/TimedAuthPrompt";
 import Marquee from "../components/home/Marquee";
@@ -49,7 +48,6 @@ export default function SiteLayout() {
       </AnimatePresence>
       <Footer />
       <FloatingActionButton />
-      <CartDrawer />
       <AuthModal />
       <TimedAuthPrompt />
     </div>

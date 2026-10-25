@@ -1,12 +1,12 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, Tags, Image, MessageSquareQuote, ShoppingCart, Users, PhoneCall, Shirt, FileText, Settings, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Package, Tags, Image, MessageSquareQuote, Users, PhoneCall, Shirt, FileText, Settings, LogOut, ExternalLink, Sparkles } from "lucide-react";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
-  { label: "Orders", to: "/admin/orders", icon: ShoppingCart, end: false },
-  { label: "Customers", to: "/admin/customers", icon: Users, end: false },
   { label: "Products", to: "/admin/products", icon: Package, end: false },
+  { label: "Bulk Import", to: "/admin/import", icon: Sparkles, end: false },
+  { label: "Customers", to: "/admin/customers", icon: Users, end: false },
   { label: "Catalogue", to: "/admin/catalogue", icon: Tags, end: false },
   { label: "Care Guides", to: "/admin/care-guides", icon: Shirt, end: false },
   { label: "Policies", to: "/admin/policies", icon: FileText, end: false },

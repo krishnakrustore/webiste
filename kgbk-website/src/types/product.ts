@@ -1,4 +1,5 @@
 export type Availability = "Available" | "Made to Order" | "Sold Out";
+export type ProductStatus = "draft" | "published";
 
 export const IMAGE_LABELS = ["Catalogue", "Blouse", "Pallu", "Detail"] as const;
 export type ImageLabel = (typeof IMAGE_LABELS)[number] | "";
@@ -20,14 +21,13 @@ export interface Product {
   subcategory: string;
   description: string;
   shortDescription: string;
-  price: number;
-  priceUnit: string;
   material: string;
   color: string;
   pattern: string;
   occasion: string;
   availability: Availability;
   featured: boolean;
+  status: ProductStatus;
   seoTitle?: string;
   seoDescription?: string;
   images: ProductImage[];
@@ -87,54 +87,3 @@ export interface Banner {
 }
 
 export type BannerInput = Omit<Banner, "id" | "createdAt">;
-
-export interface CartLine {
-  productId: string;
-  quantity: number;
-}
-
-export interface OrderItem {
-  id: string;
-  productId: string | null;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string | null;
-}
-
-export type OrderStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled";
-
-export interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  email: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-  subtotal: number;
-  shippingFee: number;
-  total: number;
-  status: OrderStatus;
-  razorpayOrderId: string | null;
-  razorpayPaymentId: string | null;
-  shiprocketOrderId: string | null;
-  items: OrderItem[];
-  createdAt: string;
-}
-
-export interface CheckoutAddress {
-  customerName: string;
-  email: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-}

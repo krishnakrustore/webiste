@@ -1,0 +1,219 @@
+import { prisma } from "../db.js";
+import { persistImage, readAsDataUrl, deleteUnusedAssets } from "../utils/imageStore.js";
+import { withUniqueSlug } from "../routes/products.js";
+import {
+  openai,
+  SHOT_KINDS,
+  generateShot,
+  describeSaree,
+  detectSareeStarts,
+  aiErrorMessage,
+  isOutOfCredits,
+  isRateLimited,
+  type Listing,
+} from "./aiCatalogue.js";
+
+// Each group makes 4 OpenAI calls at once (3 images + listing), so keep this low.
+const CONCURRENCY = Math.max(1, Number(process.env.IMPORT_CONCURRENCY) || 2);
+const MAX_REFERENCE_PHOTOS = 8;
+const RATE_LIMIT_PAUSE_MS = 60_000;
+const MAX_RATE_LIMIT_RETRIES = 3;
+
+let active = 0;
+let groupingActive = false;
+const rateLimitRetries = new Map<string, number>();
+
+const naturalCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+
+/** Call once on boot: anything interrupted by a restart is picked up again. */
+export async function startImportWorker() {
+  await prisma.importGroup.updateMany({ where: { status: "processing" }, data: { status: "queued" } });
+  kickImportWorker();
+}
+
+export function kickImportWorker() {
+  void runGroupingQueue();
+  while (active < CONCURRENCY) {
+    active++;
+    void processNext().finally(() => {
+      active--;
+    });
+  }
+}
+
+// ---- grouping -------------------------------------------------------------
+
+async function runGroupingQueue() {
+  if (groupingActive) return;
+  groupingActive = true;
+  try {
+    for (;;) {
+      const batch = await prisma.importBatch.findFirst({ where: { status: "grouping" }, orderBy: { createdAt: "asc" } });
+      if (!batch) return;
+      try {
+        await groupBatch(batch.id, batch.mode);
+        await prisma.importBatch.update({ where: { id: batch.id }, data: { status: "review", error: "" } });
+      } catch (err) {
+        console.error("Import grouping error:", err);
+        await prisma.importBatch.update({ where: { id: batch.id }, data: { status: "uploading", error: aiErrorMessage(err) } });
+      }
+    }
+  } finally {
+    groupingActive = false;
+  }
+}
+
+async function groupBatch(batchId: string, mode: string) {
+  const photos = await prisma.importPhoto.findMany({ where: { batchId }, select: { id: true, name: true, folder: true, thumb: true } });
+  if (!photos.length) throw new Error("Upload some photos first.");
+  photos.sort((a, b) => naturalCompare(a.folder, b.folder) || naturalCompare(a.name, b.name));
+
+  const starts = new Set<number>([0]);
+  photos.forEach((p, i) => {
+    if (i > 0 && p.folder !== photos[i - 1].folder) starts.add(i);
+  });
+
+  if (mode === "ai") {
+    if (!openai()) throw new Error("AI grouping needs OPENAI_API_KEY on the server. Use folder grouping instead.");
+    // Folders are hard boundaries; within each folder the AI finds where one saree ends and the next begins.
+    const runs = [...starts].sort((a, b) => a - b);
+    for (const [r, from] of runs.entries()) {
+      const to = runs[r + 1] ?? photos.length;
+      if (to - from < 2) continue;
+      const thumbs = await Promise.all(photos.slice(from, to).map((p) => readAsDataUrl(p.thumb)));
+      for (const offset of await detectSareeStarts(thumbs)) starts.add(from + offset);
+    }
+  }
+
+  const boundaries = [...starts].sort((a, b) => a - b);
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.importGroup.deleteMany({ where: { batchId, productId: null } });
+      for (const [i, from] of boundaries.entries()) {
+        const slice = photos.slice(from, boundaries[i + 1] ?? photos.length);
+        const group = await tx.importGroup.create({ data: { batchId, position: i } });
+        await tx.importPhoto.updateMany({ where: { id: { in: slice.map((p) => p.id) } }, data: { groupId: group.id } });
+      }
+      for (const [position, p] of photos.entries()) {
+        await tx.importPhoto.update({ where: { id: p.id }, data: { position } });
+      }
+    },
+    { timeout: 120_000 }
+  );
+}
+
+// ---- generation -----------------------------------------------------------
+
+async function claimNextGroup() {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = await prisma.importGroup.findFirst({
+      where: { status: "queued", batch: { status: "running" } },
+      orderBy: [{ batch: { createdAt: "asc" } }, { position: "asc" }],
+      select: { id: true },
+    });
+    if (!candidate) return null;
+    // Only one worker wins the claim even if two raced to the same row.
+    const { count } = await prisma.importGroup.updateMany({ where: { id: candidate.id, status: "queued" }, data: { status: "processing", error: "" } });
+    if (count === 1) return candidate.id;
+  }
+  return null;
+}
+
+async function processNext(): Promise<void> {
+  for (;;) {
+    const groupId = await claimNextGroup();
+    if (!groupId) return;
+    await processGroup(groupId);
+  }
+}
+
+function pickReferencePhotos<T>(photos: T[]): T[] {
+  if (photos.length <= MAX_REFERENCE_PHOTOS) return photos;
+  const step = (photos.length - 1) / (MAX_REFERENCE_PHOTOS - 1);
+  return Array.from({ length: MAX_REFERENCE_PHOTOS }, (_, i) => photos[Math.round(i * step)]);
+}
+
+async function processGroup(groupId: string) {
+  const group = await prisma.importGroup.findUnique({
+    where: { id: groupId },
+    include: { batch: true, photos: { orderBy: { position: "asc" } } },
+  });
+  if (!group) return;
+
+  try {
+    if (!group.photos.length) throw new Error("This saree has no photos.");
+    const references = await Promise.all(pickReferencePhotos(group.photos).map((p) => readAsDataUrl(p.src)));
+    const notes = group.batch.notes;
+    const existing = group.productId ? await prisma.product.findUnique({ where: { id: group.productId }, include: { images: true } }) : null;
+
+    const [listing, ...shots] = await Promise.all([
+      existing ? Promise.resolve(null) : describeSaree(references, notes),
+      ...SHOT_KINDS.map((kind) => generateShot(references, kind, notes)),
+    ]);
+
+    const altFor = (kind: string, l: Listing | null) =>
+      (kind === "Catalogue" ? l?.altCatalogue : kind === "Detail" ? l?.altDetail : l?.altPallu) || `${existing?.name ?? l?.name ?? "Saree"} -- ${kind.toLowerCase()}`;
+    const images: { src: string; alt: string; label: string; position: number }[] = [];
+    for (const [i, kind] of SHOT_KINDS.entries()) {
+      images.push({ src: await persistImage(shots[i]), alt: altFor(kind, listing), label: kind, position: i });
+    }
+
+    let productId = existing?.id;
+    if (existing) {
+      // Regenerate: replace only the images, keep any details the admin already edited.
+      await prisma.$transaction([
+        prisma.productImage.deleteMany({ where: { productId: existing.id } }),
+        prisma.product.update({ where: { id: existing.id }, data: { images: { create: images } } }),
+      ]);
+      await deleteUnusedAssets(existing.images.map((i) => i.src), images.map((i) => i.src));
+    } else if (listing) {
+      const product = await withUniqueSlug(listing.name, (slug) => prisma.product.create({
+        data: {
+          name: listing.name,
+          slug,
+          category: listing.category,
+          subcategory: listing.subcategory,
+          occasion: listing.occasion,
+          material: listing.material,
+          color: listing.color,
+          pattern: listing.pattern,
+          shortDescription: listing.shortDescription,
+          description: listing.description,
+          seoTitle: listing.seoTitle,
+          seoDescription: listing.seoDescription,
+          status: "draft",
+          images: { create: images },
+        },
+      }));
+      productId = product.id;
+    }
+
+    rateLimitRetries.delete(groupId);
+    await prisma.importGroup.update({ where: { id: groupId }, data: { status: "done", error: "", productId } });
+  } catch (err) {
+    console.error(`Import group ${groupId} failed:`, err);
+    if (isOutOfCredits(err)) {
+      // Stop the whole batch rather than failing every remaining saree one by one.
+      await prisma.importGroup.update({ where: { id: groupId }, data: { status: "queued" } });
+      await prisma.importBatch.update({ where: { id: group.batchId }, data: { status: "paused", error: aiErrorMessage(err) } });
+      return;
+    }
+    if (isRateLimited(err) && (rateLimitRetries.get(groupId) ?? 0) < MAX_RATE_LIMIT_RETRIES) {
+      rateLimitRetries.set(groupId, (rateLimitRetries.get(groupId) ?? 0) + 1);
+      await new Promise((r) => setTimeout(r, RATE_LIMIT_PAUSE_MS));
+      await prisma.importGroup.update({ where: { id: groupId }, data: { status: "queued" } });
+      return;
+    }
+    rateLimitRetries.delete(groupId);
+    await prisma.importGroup.update({ where: { id: groupId }, data: { status: "failed", error: aiErrorMessage(err) } });
+  } finally {
+    await markBatchDoneIfFinished(group.batchId);
+  }
+}
+
+async function markBatchDoneIfFinished(batchId: string) {
+  const remaining = await prisma.importGroup.count({ where: { batchId, status: { in: ["queued", "processing"] } } });
+  if (remaining === 0) {
+    await prisma.importBatch.updateMany({ where: { id: batchId, status: "running" }, data: { status: "done" } });
+  }
+}

@@ -53,15 +53,14 @@ export function buildWhatsAppLink(message: string): string {
   return `https://wa.me/${BUSINESS_CONFIG.whatsapp}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildProductEnquiryMessage(params: { name: string; id: string }): string {
+export function buildProductEnquiryMessage(params: { name: string; url: string }): string {
   return [
     `Hello ${BUSINESS_CONFIG.name},`,
     ``,
-    `I am interested in:`,
-    `Product: ${params.name}`,
-    `Product ID: ${params.id}`,
+    `I am interested in: ${params.name}`,
+    params.url,
     ``,
-    `Please share availability, pricing and more details.`,
+    `Please share the price, availability and more details.`,
     `Thank you.`,
   ].join("\n");
 }

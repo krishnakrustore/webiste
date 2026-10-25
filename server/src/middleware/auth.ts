@@ -36,6 +36,11 @@ export function requireAdmin(req: AuthedRequest, res: Response, next: NextFuncti
   next();
 }
 
+/** True when the request carries a valid admin token -- for public routes that show admins extra data (e.g. drafts). */
+export function isAdminRequest(req: Request): boolean {
+  return readToken(req)?.role === "admin";
+}
+
 export function requireCustomer(req: AuthedRequest, res: Response, next: NextFunction) {
   const claims = readToken(req);
   if (!claims || claims.role !== "customer") return res.status(401).json({ error: "Missing or invalid login" });

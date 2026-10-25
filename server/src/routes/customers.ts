@@ -82,21 +82,11 @@ customersRouter.get("/me", requireCustomer, async (req: AuthedRequest, res) => {
   res.json({ id: customer.id, name: customer.name, email: customer.email, phone: customer.phone });
 });
 
-customersRouter.get("/me/orders", requireCustomer, async (req: AuthedRequest, res) => {
-  const orders = await prisma.order.findMany({
-    where: { customerId: req.customerId },
-    include: { items: true },
-    orderBy: { createdAt: "desc" },
-  });
-  res.json(orders);
-});
-
-// Admin-only: full customer list with order counts, so every registered
-// shopper's details are visible in Admin > Customers.
+// Admin-only: full customer list, so every registered shopper's details are visible in Admin > Customers.
 customersRouter.get("/", requireAdmin, async (_req, res) => {
   const customers = await prisma.customer.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { orders: true, wishlist: true } } },
+    include: { _count: { select: { wishlist: true } } },
   });
   res.json(
     customers.map((c) => ({
@@ -105,7 +95,6 @@ customersRouter.get("/", requireAdmin, async (_req, res) => {
       email: c.email,
       phone: c.phone,
       createdAt: c.createdAt,
-      orderCount: c._count.orders,
       wishlistCount: c._count.wishlist,
     }))
   );

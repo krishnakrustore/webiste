@@ -39,13 +39,11 @@ const cols = [
       { label: "Our Blog", to: "/blog" },
       { label: "Work With Us", to: "/careers" },
       { label: "Our Stores", to: "/contact" },
-      { label: "Track Your Order", to: "/track-order" },
     ],
   },
   {
     title: "Quick Links",
     links: [
-      { label: "Payment Policy", to: "/policies/payment-policy" },
       { label: "Privacy Policy", to: "/policies/privacy-policy" },
       { label: "Shipping Policy", to: "/policies/shipping-policy" },
       { label: "Return & Exchange Policy", to: "/policies/returns-exchange" },

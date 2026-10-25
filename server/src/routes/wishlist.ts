@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { requireCustomer, type AuthedRequest } from "../middleware/auth.js";
+import { serializeProduct } from "./products.js";
 
 export const wishlistRouter = Router();
 
@@ -11,7 +12,7 @@ wishlistRouter.get("/", requireCustomer, async (req: AuthedRequest, res) => {
     include: { product: { include: { images: true } } },
     orderBy: { createdAt: "desc" },
   });
-  res.json(items.map((i) => i.product));
+  res.json(items.filter((i) => i.product.status === "published").map((i) => serializeProduct(req, i.product)));
 });
 
 const addSchema = z.object({ productId: z.string().min(1) });

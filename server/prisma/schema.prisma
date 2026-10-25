@@ -23,18 +23,20 @@ model Product {
   subcategory      String
   description      String
   shortDescription String
-  price            Float
-  priceUnit        String
+  // Not shown on the website (enquiries go through WhatsApp); kept so existing rows stay valid.
+  price            Float          @default(0)
+  priceUnit        String         @default("")
   material         String
   color            String
   pattern          String
   occasion         String
   availability     String         @default("Available") // Available | Made to Order | Sold Out
   featured         Boolean        @default(false)
+  // "draft" products (e.g. from bulk AI import) are hidden from the website until published.
+  status           String         @default("published")
   seoTitle         String         @default("")
   seoDescription   String         @default("")
   images           ProductImage[]
-  orderItems       OrderItem[]
   wishlistedBy     WishlistItem[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -109,32 +111,6 @@ model Banner {
   createdAt DateTime @default(now())
 }
 
-model Order {
-  id                String      @id @default(cuid())
-  orderNumber       String      @unique
-  customer          Customer?   @relation(fields: [customerId], references: [id])
-  customerId        String?
-  customerName      String
-  email             String
-  phone             String
-  addressLine1      String
-  addressLine2      String?
-  city              String
-  state             String
-  pincode           String
-  country           String      @default("India")
-  subtotal          Float
-  shippingFee       Float       @default(0)
-  total             Float
-  status            String      @default("pending") // pending | paid | shipped | delivered | cancelled
-  razorpayOrderId   String?
-  razorpayPaymentId String?
-  shiprocketOrderId String?
-  items             OrderItem[]
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-}
-
 model Customer {
   id           String         @id @default(cuid())
   name         String
@@ -142,7 +118,6 @@ model Customer {
   phone        String         @default("")
   passwordHash String
   wishlist     WishlistItem[]
-  orders       Order[]
   createdAt    DateTime       @default(now())
 }
 
@@ -155,18 +130,6 @@ model WishlistItem {
   createdAt  DateTime @default(now())
 
   @@unique([customerId, productId])
-}
-
-model OrderItem {
-  id        String   @id @default(cuid())
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId   String
-  product   Product? @relation(fields: [productId], references: [id])
-  productId String?
-  name      String
-  price     Float
-  quantity  Int
-  image     String?
 }
 
 model CareGuide {
@@ -220,4 +183,54 @@ model AdminUser {
   id           String @id @default(cuid())
   username     String @unique
   passwordHash String
+}
+
+// ---- Bulk AI import -------------------------------------------------------
+// A batch is one upload session (e.g. the 1,500 photos from a pendrive).
+// Photos are grouped into one ImportGroup per saree; each group becomes one
+// draft Product with 3 AI-generated images once generation runs.
+model ImportBatch {
+  id        String        @id @default(cuid())
+  name      String
+  // uploading | grouping | review | running | paused | done
+  status    String        @default("uploading")
+  // "folders": one saree per folder. "ai": photos in shooting order, AI finds where each saree starts.
+  mode      String        @default("ai")
+  notes     String        @default("")
+  error     String        @default("")
+  createdAt DateTime      @default(now())
+  photos    ImportPhoto[]
+  groups    ImportGroup[]
+}
+
+model ImportGroup {
+  id        String        @id @default(cuid())
+  batch     ImportBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batchId   String
+  position  Int
+  // pending | queued | processing | done | failed | skipped
+  status    String        @default("pending")
+  error     String        @default("")
+  productId String?
+  photos    ImportPhoto[]
+
+  @@index([batchId, position])
+  @@index([status])
+}
+
+model ImportPhoto {
+  id       String       @id @default(cuid())
+  batch    ImportBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batchId  String
+  group    ImportGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  groupId  String?
+  // Shooting order within the batch (folder, then file name).
+  position Int
+  name     String
+  folder   String       @default("")
+  src      String
+  thumb    String
+
+  @@unique([batchId, folder, name])
+  @@index([batchId, position])
 }

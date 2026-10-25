@@ -8,9 +8,6 @@ import { productsRouter } from "./routes/products.js";
 import { categoriesRouter, occasionsRouter, fabricTypesRouter } from "./routes/taxonomy.js";
 import { testimonialsRouter } from "./routes/testimonials.js";
 import { bannersRouter } from "./routes/banners.js";
-import { ordersRouter } from "./routes/orders.js";
-import { paymentsRouter } from "./routes/payments.js";
-import { shippingRouter } from "./routes/shipping.js";
 import { scheduleCallRouter } from "./routes/scheduleCall.js";
 import { settingsRouter } from "./routes/settings.js";
 import { customersRouter } from "./routes/customers.js";
@@ -20,6 +17,8 @@ import { policiesRouter } from "./routes/policies.js";
 import { imagesRouter } from "./routes/images.js";
 import { aiRouter } from "./routes/ai.js";
 import { sitemapRouter } from "./routes/sitemap.js";
+import { importRouter } from "./routes/import.js";
+import { startImportWorker } from "./services/importWorker.js";
 
 const app = express();
 // Railway terminates TLS at its proxy; this makes req.protocol report https for absolute image URLs.
@@ -37,9 +36,6 @@ app.use("/api/occasions", occasionsRouter);
 app.use("/api/fabric-types", fabricTypesRouter);
 app.use("/api/testimonials", testimonialsRouter);
 app.use("/api/banners", bannersRouter);
-app.use("/api/orders", ordersRouter);
-app.use("/api/payments", paymentsRouter);
-app.use("/api/shipping", shippingRouter);
 app.use("/api/schedule-call", scheduleCallRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/customers", customersRouter);
@@ -49,6 +45,7 @@ app.use("/api/policies", policiesRouter);
 app.use("/api/images", imagesRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/sitemap.xml", sitemapRouter);
+app.use("/api/import", importRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const status = (err as { status?: number; type?: string }).status;
@@ -65,4 +62,5 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {
   console.log(`kgbk-server listening on http://localhost:${port}`);
+  startImportWorker().catch((err) => console.error("Import worker failed to start:", err));
 });

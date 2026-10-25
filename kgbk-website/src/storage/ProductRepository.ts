@@ -34,9 +34,15 @@ export const ProductRepository = {
     return api.get<Product[]>(`/products${qs ? `?${qs}` : ""}`);
   },
 
+  /** Admin view: includes drafts. */
+  async getAdminProducts(): Promise<Product[]> {
+    return api.get<Product[]>("/products?all=true", true);
+  },
+
   async getProduct(id: string): Promise<Product | undefined> {
     try {
-      return await api.get<Product>(`/products/${id}`);
+      // Sent with the admin token (when present) so drafts open in the editor.
+      return await api.get<Product>(`/products/${id}`, true);
     } catch {
       return undefined;
     }
@@ -60,6 +66,12 @@ export const ProductRepository = {
     const updated = await api.put<Product>(`/products/${product.id}`, product, true);
     broadcast({ type: "product:updated", productId: product.id });
     return updated;
+  },
+
+  async bulk(ids: string[], action: "publish" | "unpublish" | "delete"): Promise<number> {
+    const { count } = await api.post<{ count: number }>("/products/bulk", { ids, action }, true);
+    ids.forEach((productId) => broadcast({ type: action === "delete" ? "product:deleted" : "product:updated", productId }));
+    return count;
   },
 
   async deleteProduct(id: string): Promise<void> {

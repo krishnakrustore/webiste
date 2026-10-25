@@ -1,12 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, Heart, User, ShoppingBag, ChevronDown } from "lucide-react";
-import { useCart } from "../../context/CartContext";
+import { Search, Menu, X, Heart, User, ChevronDown } from "lucide-react";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { useFabricTypes } from "../../hooks/useTaxonomy";
 import SearchOverlay from "./SearchOverlay";
 import AccountMenu from "./AccountMenu";
+import WhatsAppIcon from "../ui/WhatsAppIcon";
+import { buildWhatsAppLink, buildGeneralEnquiryMessage } from "../../config/business";
 
 const NAV_LINKS = [
   { label: "Home", to: "/" },
@@ -25,7 +26,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [fabricMenuOpen, setFabricMenuOpen] = useState(false);
-  const { count, open: openCart } = useCart();
   const { customer, wishlist, openAuth } = useCustomerAuth();
   const { fabricTypes } = useFabricTypes();
   const navigate = useNavigate();
@@ -134,18 +134,6 @@ export default function Header() {
                 Login
               </button>
             )}
-            <button
-              aria-label="Open cart"
-              onClick={openCart}
-              className="relative flex text-charcoal/75 hover:text-wine transition-transform duration-300 hover:scale-110"
-            >
-              <ShoppingBag size={19} />
-              {count > 0 && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-wine text-ivory text-[9px] flex items-center justify-center">
-                  {count}
-                </span>
-              )}
-            </button>
             <button
               aria-label="Open menu"
               onClick={() => setMenuOpen(true)}
@@ -285,11 +273,16 @@ export default function Header() {
                     Log In
                   </button>
                 )}
-                <button onClick={() => { setMenuOpen(false); openCart(); }} className="relative flex flex-col items-center gap-1 text-charcoal/70 text-xs">
-                  <ShoppingBag size={20} />
-                  Cart
-                  {count > 0 && <span className="absolute -top-1 right-1.5 w-4 h-4 rounded-full bg-wine text-ivory text-[9px] flex items-center justify-center">{count}</span>}
-                </button>
+                <a
+                  href={buildWhatsAppLink(buildGeneralEnquiryMessage())}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex flex-col items-center gap-1 text-charcoal/70 text-xs"
+                >
+                  <WhatsAppIcon size={20} />
+                  Enquire
+                </a>
               </div>
             </motion.div>
           </motion.div>

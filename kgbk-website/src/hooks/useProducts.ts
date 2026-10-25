@@ -21,6 +21,23 @@ export function useProducts() {
   return { products, loading, reload };
 }
 
+export function useAdminProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(async () => {
+    setProducts(await ProductRepository.getAdminProducts());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    reload();
+    return subscribeToCatalogueChanges(() => reload());
+  }, [reload]);
+
+  return { products, loading, reload };
+}
+
 export function useProduct(slug: string | undefined) {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [loading, setLoading] = useState(true);

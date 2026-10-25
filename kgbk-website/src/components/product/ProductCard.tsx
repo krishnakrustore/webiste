@@ -1,16 +1,15 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ShoppingBag, Heart } from "lucide-react";
+import { ArrowUpRight, Heart } from "lucide-react";
 import type { Product } from "../../types/product";
-import { useCart } from "../../context/CartContext";
+import WhatsAppIcon from "../ui/WhatsAppIcon";
+import { buildWhatsAppLink, buildProductEnquiryMessage } from "../../config/business";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { productUrl } from "../../utils/productUrl";
 
 export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const cover = product.images[0];
-  const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useCustomerAuth();
-  const soldOut = product.availability === "Sold Out";
   const wishlisted = isWishlisted(product.id);
   const href = productUrl(product);
   return (
@@ -46,13 +45,14 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           <Heart size={14} className={wishlisted ? "text-wine" : "text-charcoal/60"} fill={wishlisted ? "currentColor" : "none"} />
         </button>
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400 z-10">
-          <button
-            onClick={() => addItem(product)}
-            disabled={soldOut}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-wine text-ivory text-[12px] py-2.5 font-medium hover:bg-wine-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          <a
+            href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, url: `${window.location.origin}${href}` }))}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-wine text-ivory text-[12px] py-2.5 font-medium hover:bg-wine-dark transition-colors"
           >
-            <ShoppingBag size={14} /> {soldOut ? "Sold Out" : "Add to Cart"}
-          </button>
+            <WhatsAppIcon size={14} /> Enquire on WhatsApp
+          </a>
         </div>
       </div>
       <Link to={href} className="block mt-4">
@@ -65,9 +65,6 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           </div>
           <ArrowUpRight size={15} className="mt-1 text-gold shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </div>
-        <p className="text-sm text-wine mt-2 font-medium">
-          &#8377;{product.price.toLocaleString("en-IN")} <span className="text-charcoal/40 font-normal">{product.priceUnit}</span>
-        </p>
       </Link>
     </motion.div>
   );

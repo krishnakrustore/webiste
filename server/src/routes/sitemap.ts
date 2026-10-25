@@ -11,7 +11,7 @@ sitemapRouter.get("/", async (_req, res) => {
   const site = (process.env.SITE_URL || "https://krishnagaribattalakottu.com").replace(/\/$/, "");
   const [categories, products, policies] = await Promise.all([
     prisma.category.findMany({ select: { slug: true } }),
-    prisma.product.findMany({ select: { slug: true, category: true, updatedAt: true } }),
+    prisma.product.findMany({ where: { status: "published" }, select: { slug: true, category: true, updatedAt: true } }),
     prisma.policy.findMany({ select: { slug: true, updatedAt: true } }),
   ]);
 
