@@ -224,10 +224,13 @@ model ImportPhoto {
   batchId  String
   group    ImportGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   groupId  String?
-  // Shooting order within the batch (folder, then file name).
+  // Shooting order within the batch, set when photos are grouped.
   position Int
   name     String
   folder   String       @default("")
+  // Camera capture time from the photo's EXIF ("YYYY-MM-DDTHH:MM:SS"), "" if unknown.
+  // This is what keeps an unorganised pendrive in shooting order.
+  takenAt  String       @default("")
   src      String
   thumb    String
 

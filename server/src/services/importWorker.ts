@@ -17,13 +17,26 @@ import {
 const CONCURRENCY = Math.max(1, Number(process.env.IMPORT_CONCURRENCY) || 2);
 const MAX_REFERENCE_PHOTOS = 8;
 const RATE_LIMIT_PAUSE_MS = 60_000;
-const MAX_RATE_LIMIT_RETRIES = 3;
+// Large batches will hit OpenAI rate limits; waiting and retrying is normal, not a failure.
+const MAX_RATE_LIMIT_RETRIES = 10;
 
 let active = 0;
 let groupingActive = false;
 const rateLimitRetries = new Map<string, number>();
 
 const naturalCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+
+type SortablePhoto = { name: string; folder: string; takenAt: string };
+
+/**
+ * Shooting order: camera capture time when the photo has one (survives renamed/copied/mixed files),
+ * otherwise folder + natural file name. Photos without a capture time go after those with one.
+ */
+export function shootingOrder(a: SortablePhoto, b: SortablePhoto) {
+  if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt) || naturalCompare(a.name, b.name);
+  if (a.takenAt !== b.takenAt) return a.takenAt ? -1 : 1;
+  return naturalCompare(a.folder, b.folder) || naturalCompare(a.name, b.name);
+}
 
 /** Call once on boot: anything interrupted by a restart is picked up again. */
 export async function startImportWorker() {
@@ -64,25 +77,22 @@ async function runGroupingQueue() {
 }
 
 async function groupBatch(batchId: string, mode: string) {
-  const photos = await prisma.importPhoto.findMany({ where: { batchId }, select: { id: true, name: true, folder: true, thumb: true } });
+  const photos = await prisma.importPhoto.findMany({ where: { batchId }, select: { id: true, name: true, folder: true, takenAt: true, thumb: true } });
   if (!photos.length) throw new Error("Upload some photos first.");
-  photos.sort((a, b) => naturalCompare(a.folder, b.folder) || naturalCompare(a.name, b.name));
 
   const starts = new Set<number>([0]);
-  photos.forEach((p, i) => {
-    if (i > 0 && p.folder !== photos[i - 1].folder) starts.add(i);
-  });
-
-  if (mode === "ai") {
+  if (mode === "folders") {
+    photos.sort((a, b) => naturalCompare(a.folder, b.folder) || naturalCompare(a.name, b.name));
+    photos.forEach((p, i) => {
+      if (i > 0 && p.folder !== photos[i - 1].folder) starts.add(i);
+    });
+  } else {
     if (!openai()) throw new Error("AI grouping needs OPENAI_API_KEY on the server. Use folder grouping instead.");
-    // Folders are hard boundaries; within each folder the AI finds where one saree ends and the next begins.
-    const runs = [...starts].sort((a, b) => a - b);
-    for (const [r, from] of runs.entries()) {
-      const to = runs[r + 1] ?? photos.length;
-      if (to - from < 2) continue;
-      const thumbs = await Promise.all(photos.slice(from, to).map((p) => readAsDataUrl(p.thumb)));
-      for (const offset of await detectSareeStarts(thumbs)) starts.add(from + offset);
-    }
+    // Folders are ignored here: camera folders (DCIM/100MEDIA, 101MEDIA...) can split one saree's photos.
+    photos.sort(shootingOrder);
+    const thumbs: string[] = [];
+    for (const p of photos) thumbs.push(await readAsDataUrl(p.thumb));
+    for (const index of await detectSareeStarts(thumbs)) starts.add(index);
   }
 
   const boundaries = [...starts].sort((a, b) => a - b);

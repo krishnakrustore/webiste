@@ -4,6 +4,7 @@ import { AiApi, type AiListing, type AiShot, type AiStatus } from "../../api/adm
 import { ApiError } from "../../api/client";
 import type { ProductImage } from "../../types/product";
 import { compressImage } from "../../utils/image";
+import { isSupportedPhoto, toBrowserImage } from "../../utils/photoFile";
 
 const SHOTS: AiShot[] = ["Catalogue", "Detail", "Pallu"];
 const SHOT_HINT: Record<AiShot, string> = {
@@ -65,8 +66,8 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
     try {
       const next: { id: string; src: string }[] = [];
       for (const file of Array.from(files).slice(0, MAX_PHOTOS - photos.length)) {
-        if (!file.type.startsWith("image/")) continue;
-        next.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, src: await compressImage(file, 1600, 0.85) });
+        if (!isSupportedPhoto(file)) continue;
+        next.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, src: await compressImage(await toBrowserImage(file), 1600, 0.85) });
       }
       setPhotos((p) => [...p, ...next]);
     } finally {
@@ -167,7 +168,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
                   {preparing ? "Optimising" : "Add"}
                 </button>
               )}
-              <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { if (e.target.files) addPhotos(e.target.files); e.target.value = ""; }} />
+              <input ref={inputRef} type="file" accept="image/*,.heic,.heif" multiple hidden onChange={(e) => { if (e.target.files) addPhotos(e.target.files); e.target.value = ""; }} />
             </div>
           </div>
 

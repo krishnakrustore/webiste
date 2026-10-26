@@ -41,6 +41,7 @@ export interface ImportBatchDetail extends Omit<ImportBatchSummary, "groups"> {
 export interface UploadPhoto {
   name: string;
   folder: string;
+  takenAt: string;
   src: string;
   thumb: string;
 }
@@ -62,4 +63,5 @@ export const ImportApi = {
   skip: (groupId: string, skipped: boolean) => api.post(`/import/groups/${groupId}/skip`, { skipped }, true),
   retry: (groupId: string) => api.post(`/import/groups/${groupId}/retry`, undefined, true),
   removePhoto: (photoId: string) => api.delete(`/import/photos/${photoId}`, true),
+  movePhoto: (photoId: string, position: number) => api.post(`/import/photos/${photoId}/move`, { position }, true),
 };

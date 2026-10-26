@@ -3,6 +3,7 @@ import { motion, Reorder } from "framer-motion";
 import { UploadCloud, X, GripVertical } from "lucide-react";
 import { IMAGE_LABELS, type ImageLabel, type ProductImage } from "../../types/product";
 import { compressImage } from "../../utils/image";
+import { isSupportedPhoto, toBrowserImage } from "../../utils/photoFile";
 
 interface Props {
   images: ProductImage[];
@@ -20,8 +21,8 @@ export default function ImageUploader({ images, onChange, max = 12 }: Props) {
     try {
       const items: ProductImage[] = [];
       for (const file of Array.from(files).slice(0, Math.max(0, max - images.length))) {
-        if (!file.type.startsWith("image/")) continue;
-        const src = await compressImage(file);
+        if (!isSupportedPhoto(file)) continue;
+        const src = await compressImage(await toBrowserImage(file));
         items.push({ id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, src, alt: "", label: "" });
       }
       onChange([...images, ...items]);
@@ -57,7 +58,7 @@ export default function ImageUploader({ images, onChange, max = 12 }: Props) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           hidden
           onChange={(e) => {

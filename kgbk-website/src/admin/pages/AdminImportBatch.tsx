@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FolderOpen, Images, Loader2, Scissors, X, Merge, EyeOff, Eye, RefreshCw, Pause, Play, Trash2, Wand2, ExternalLink } from "lucide-react";
+import { ArrowLeft, FolderOpen, Images, Loader2, Scissors, X, Merge, EyeOff, Eye, RefreshCw, Pause, Play, Trash2, Wand2, ExternalLink, MoveRight } from "lucide-react";
 import { ImportApi, type ImportBatchDetail, type ImportGroupView, type GroupingMode, type GroupStatus } from "../../api/import";
 import { ApiError } from "../../api/client";
 import { compressImage } from "../../utils/image";
+import { isSupportedPhoto, readTakenAt, toBrowserImage } from "../../utils/photoFile";
 import { BATCH_STATUS_LABEL, GROUP_STATUS_LABEL } from "../importStatus";
 
-const SUPPORTED = /^image\/(jpeg|png|webp)$/i;
 const UPLOAD_CHUNK = 3;
 const UPLOAD_CONCURRENCY = 3;
 const PAGE = 40;
@@ -32,6 +32,7 @@ export default function AdminImportBatch() {
   const [visible, setVisible] = useState(PAGE);
   const [notes, setNotes] = useState("");
   const cancelUpload = useRef(false);
+  const progressStart = useRef<{ time: number; done: number } | null>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const filesInput = useRef<HTMLInputElement>(null);
 
@@ -81,7 +82,7 @@ export default function AdminImportBatch() {
 
   async function uploadFiles(fileList: FileList) {
     const files = Array.from(fileList);
-    const supported = files.filter((f) => SUPPORTED.test(f.type));
+    const supported = files.filter(isSupportedPhoto);
     cancelUpload.current = false;
     setUpload({ total: 0, done: 0, failed: 0, existing: 0, unsupported: files.length - supported.length, running: true });
 
@@ -105,7 +106,9 @@ export default function AdminImportBatch() {
         try {
           const photos = [];
           for (const f of chunk) {
-            photos.push({ name: f.name, folder: f.folder, src: await compressImage(f.file, 1600, 0.85), thumb: await compressImage(f.file, 320, 0.72) });
+            const takenAt = await readTakenAt(f.file);
+            const image = await toBrowserImage(f.file);
+            photos.push({ name: f.name, folder: f.folder, takenAt, src: await compressImage(image, 1600, 0.85), thumb: await compressImage(image, 320, 0.72) });
           }
           try {
             await ImportApi.upload(id, photos);
@@ -137,6 +140,20 @@ export default function AdminImportBatch() {
   const activeTotal = batch.groups.length - (batch.byStatus.skipped ?? 0);
   const groups = filter === "all" ? batch.groups : batch.groups.filter((g) => g.status === filter);
   const folderCount = new Set(batch.groups.flatMap((g) => g.photos.map((p) => p.folder))).size;
+
+  // Time-left estimate from the speed observed while this page has been open.
+  let eta = "";
+  if (batch.status === "running") {
+    progressStart.current ??= { time: Date.now(), done };
+    const finished = done - progressStart.current.done;
+    const remaining = activeTotal - done - failed;
+    if (finished > 0 && remaining > 0) {
+      const minutes = Math.ceil(((Date.now() - progressStart.current.time) / finished) * remaining / 60000);
+      eta = minutes >= 90 ? `about ${Math.round(minutes / 60)} hours left` : `about ${minutes} min left`;
+    }
+  } else {
+    progressStart.current = null;
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-6xl">
@@ -178,8 +195,8 @@ export default function AdminImportBatch() {
         <section className="bg-white rounded-xl border border-charcoal/5 p-6 mb-5">
           <h2 className="text-sm font-semibold mb-1">1. Upload photos</h2>
           <p className="text-xs text-charcoal/50 mb-4">
-            Choose the whole folder from the pendrive. Keep the original camera file names -- they record the order the photos were taken.
-            You can upload in several rounds; photos already uploaded are skipped automatically.
+            Choose the whole folder from the pendrive -- photos can be mixed up in any folders. iPhone (HEIC) photos are converted automatically.
+            You can upload in several rounds; photos already uploaded are skipped.
           </p>
           <div className="flex flex-wrap gap-3">
             <button
@@ -199,7 +216,7 @@ export default function AdminImportBatch() {
               <Images size={15} /> Choose photos
             </button>
             <input ref={folderInput} type="file" multiple hidden onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); e.target.value = ""; }} />
-            <input ref={filesInput} type="file" accept="image/*" multiple hidden onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); e.target.value = ""; }} />
+            <input ref={filesInput} type="file" accept="image/*,.heic,.heif" multiple hidden onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); e.target.value = ""; }} />
           </div>
 
           {upload && (
@@ -218,7 +235,7 @@ export default function AdminImportBatch() {
               {upload.existing > 0 && <p className="text-xs text-charcoal/45 mt-1">{upload.existing} already uploaded, skipped.</p>}
               {upload.unsupported > 0 && (
                 <p className="text-xs text-amber-700 mt-1">
-                  {upload.unsupported} file{upload.unsupported !== 1 ? "s were" : " was"} skipped because they aren&rsquo;t JPEG, PNG or WebP (e.g. iPhone HEIC photos or videos). Convert HEIC to JPEG first.
+                  {upload.unsupported} file{upload.unsupported !== 1 ? "s were" : " was"} skipped because they aren&rsquo;t photos (e.g. videos or documents).
                 </p>
               )}
               {upload.error && <p className="text-xs text-red-600 mt-1">{upload.error}</p>}
@@ -258,7 +275,7 @@ export default function AdminImportBatch() {
           <div className="grid sm:grid-cols-2 gap-3 mb-4">
             {([
               ["folders", "One folder per saree", "Each saree's photos are in their own folder. 100% accurate and free."],
-              ["ai", "AI finds the sarees", "Photos in shooting order (any folders). The AI spots where each new saree starts; you check the result."],
+              ["ai", "AI finds the sarees", "For mixed-up photos. They're put in the order they were taken (from the camera's own timestamp), then the AI spots where each new saree starts. You check the result."],
             ] as [GroupingMode, string, string][]).map(([mode, title, body]) => (
               <label key={mode} className={`rounded-lg border p-4 cursor-pointer transition-colors ${batch.mode === mode ? "border-wine bg-champagne/15" : "border-charcoal/10 hover:border-gold"}`}>
                 <div className="flex items-center gap-2">
@@ -308,7 +325,9 @@ export default function AdminImportBatch() {
                 {done} of {activeTotal} sarees generated
                 {(batch.byStatus.processing ?? 0) + (batch.byStatus.queued ?? 0) > 0 && ` · ${(batch.byStatus.processing ?? 0) + (batch.byStatus.queued ?? 0)} in queue`}
                 {failed > 0 && <span className="text-red-600"> · {failed} failed</span>}
+                {eta && ` · ${eta}`}
               </p>
+              {batch.status === "running" && <p className="text-[11px] text-charcoal/40 mt-1">Runs on the server -- you can close this page or turn off this computer.</p>}
             </div>
           )}
           <div className="flex flex-wrap gap-3">
@@ -424,9 +443,22 @@ function GroupCard({ group: g, isFirst, busy, act }: { group: ImportGroupView; i
                       <Scissors size={11} />
                     </button>
                   ) : <span />}
-                  <button disabled={busy} onClick={() => act(() => ImportApi.removePhoto(p.id))} title="Remove this photo" className="w-5 h-5 rounded bg-charcoal/75 text-ivory flex items-center justify-center">
-                    <X size={11} />
-                  </button>
+                  <span className="flex gap-0.5">
+                    <button
+                      disabled={busy}
+                      onClick={() => {
+                        const n = window.prompt("This photo belongs to which saree? Enter the saree number:");
+                        if (n && Number(n) > 0) act(() => ImportApi.movePhoto(p.id, Number(n)));
+                      }}
+                      title="Move to another saree"
+                      className="w-5 h-5 rounded bg-charcoal/75 text-ivory flex items-center justify-center"
+                    >
+                      <MoveRight size={11} />
+                    </button>
+                    <button disabled={busy} onClick={() => act(() => ImportApi.removePhoto(p.id))} title="Remove this photo" className="w-5 h-5 rounded bg-charcoal/75 text-ivory flex items-center justify-center">
+                      <X size={11} />
+                    </button>
+                  </span>
                 </div>
               )}
             </div>

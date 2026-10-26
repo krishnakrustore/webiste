@@ -85,7 +85,15 @@ importRouter.get("/batches/:id/keys", async (req, res) => {
 const jpegDataUrl = z.string().regex(/^data:image\/(jpeg|png|webp);base64,/i, "Photos must be JPEG, PNG or WebP");
 const uploadSchema = z.object({
   photos: z
-    .array(z.object({ name: z.string().min(1).max(255), folder: z.string().max(500).default(""), src: jpegDataUrl, thumb: jpegDataUrl }))
+    .array(
+      z.object({
+        name: z.string().min(1).max(255),
+        folder: z.string().max(500).default(""),
+        takenAt: z.string().regex(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})?$/).default(""),
+        src: jpegDataUrl,
+        thumb: jpegDataUrl,
+      })
+    )
     .min(1)
     .max(10),
 });
@@ -104,7 +112,7 @@ importRouter.post("/batches/:id/photos", async (req, res) => {
       const exists = await prisma.importPhoto.findUnique({ where: { batchId_folder_name: { batchId: batch.id, folder: p.folder, name: p.name } }, select: { id: true } });
       if (exists) continue;
       const [src, thumb] = [await persistImage(p.src), await persistImage(p.thumb)];
-      await prisma.importPhoto.create({ data: { batchId: batch.id, name: p.name, folder: p.folder, src, thumb, position: position++ } });
+      await prisma.importPhoto.create({ data: { batchId: batch.id, name: p.name, folder: p.folder, takenAt: p.takenAt, src, thumb, position: position++ } });
       added++;
     }
   } catch (err) {
@@ -228,6 +236,24 @@ importRouter.post("/groups/:id/retry", async (req, res) => {
   await prisma.importGroup.update({ where: { id: group.id }, data: { status: "queued", error: "" } });
   await prisma.importBatch.update({ where: { id: group.batchId }, data: { status: "running", error: "" } });
   kickImportWorker();
+  res.json({ ok: true });
+});
+
+// Fixes a photo the AI put with the wrong saree, wherever the right saree is in the list.
+importRouter.post("/photos/:id/move", async (req, res) => {
+  const photo = await prisma.importPhoto.findUnique({ where: { id: req.params.id }, include: { group: true } });
+  if (!photo || !photo.group) return res.status(404).json({ error: "Photo not found" });
+  const target = await prisma.importGroup.findFirst({ where: { batchId: photo.batchId, position: Number(req.body?.position) - 1 } });
+  if (!target) return res.status(400).json({ error: "There is no saree with that number." });
+  for (const g of [photo.group, target]) {
+    if (!EDITABLE_GROUP.includes(g.status) || g.productId) return res.status(409).json({ error: `Saree ${g.position + 1} is already generated or in progress.` });
+  }
+  if (target.id === photo.group.id) return res.json({ ok: true });
+  await prisma.importPhoto.update({ where: { id: photo.id }, data: { groupId: target.id } });
+  if (!(await prisma.importPhoto.count({ where: { groupId: photo.group.id } }))) {
+    await prisma.importGroup.delete({ where: { id: photo.group.id } });
+    await renumber(photo.batchId);
+  }
   res.json({ ok: true });
 });
 
