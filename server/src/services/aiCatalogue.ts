@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 
 export const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.4-mini";
-export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
+export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2.5-sunburst";
 
 let client: OpenAI | null = null;
 export function openai(): OpenAI | null {
@@ -86,19 +86,23 @@ function requireClient(): OpenAI {
 }
 
 /** Generates one product shot from the reference photos; returns a webp data URL. */
+// Only the gpt-image-1 family takes input_fidelity: gpt-image-2 ignores it and the 2.5 models reject it with a 400.
+const takesInputFidelity = (model: string) => /^gpt-image-1/.test(model);
+
 export async function generateShot(photos: string[], kind: ShotKind, notes = ""): Promise<string> {
   const ai = requireClient();
-  const prompt = notes.trim() ? `${SHOTS[kind]}\nAdditional notes from the store: ${notes.trim()}` : SHOTS[kind];
-  const result = await ai.images.edit({
+  const extra = notes.trim() ? `\nAdditional notes from the store: ${notes.trim()}` : "";
+  const request = {
     model: IMAGE_MODEL,
     image: await Promise.all(photos.map(toUpload)),
-    prompt,
+    prompt: SHOTS[kind] + extra,
     size: "1024x1536",
     quality: "high",
-    input_fidelity: "high",
     output_format: "webp",
     output_compression: 85,
-  });
+  } as const;
+
+  const result = await ai.images.edit(takesInputFidelity(IMAGE_MODEL) ? { ...request, input_fidelity: "high" } : request);
   const b64 = result.data?.[0]?.b64_json;
   if (!b64) throw new Error("The AI returned no image. Please try again.");
   return `data:image/webp;base64,${b64}`;
