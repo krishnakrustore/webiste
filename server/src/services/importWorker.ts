@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { prisma } from "../db.js";
 import { persistImage, readAsDataUrl, deleteUnusedAssets } from "../utils/imageStore.js";
 import { withUniqueSlug } from "../routes/products.js";
@@ -6,7 +7,7 @@ import {
   generateShot,
   makeZoom,
   describeSaree,
-  detectSareeStarts,
+  detectSarees,
   aiErrorMessage,
   isOutOfCredits,
   isRateLimited,
@@ -76,8 +77,17 @@ async function runGroupingQueue() {
   }
 }
 
+const secondsBetween = (earlier: string, later: string) => (Date.parse(`${later}Z`) - Date.parse(`${earlier}Z`)) / 1000;
+
+/** A small copy of a stored photo. Bigger copies made the AI nitpick texture and split one saree into pieces. */
+async function groupingImage(src: string) {
+  const input = Buffer.from((await readAsDataUrl(src)).split(",")[1], "base64");
+  const out = await sharp(input).rotate().resize({ width: 384, height: 384, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
+  return `data:image/jpeg;base64,${out.toString("base64")}`;
+}
+
 async function groupBatch(batchId: string, mode: string) {
-  const photos = await prisma.importPhoto.findMany({ where: { batchId }, select: { id: true, name: true, folder: true, takenAt: true, thumb: true } });
+  const photos = await prisma.importPhoto.findMany({ where: { batchId }, select: { id: true, name: true, folder: true, takenAt: true, src: true } });
   if (!photos.length) throw new Error("Upload some photos first.");
 
   const starts = new Set<number>([0]);
@@ -90,9 +100,10 @@ async function groupBatch(batchId: string, mode: string) {
     if (!openai()) throw new Error("AI grouping needs OPENAI_API_KEY on the server. Use folder grouping instead.");
     // Folders are ignored here: camera folders (DCIM/100MEDIA, 101MEDIA...) can split one saree's photos.
     photos.sort(shootingOrder);
-    const thumbs: string[] = [];
-    for (const p of photos) thumbs.push(await readAsDataUrl(p.thumb));
-    for (const index of await detectSareeStarts(thumbs)) starts.add(index);
+    const gaps = photos.map((p, i) => (i && p.takenAt && photos[i - 1].takenAt ? secondsBetween(photos[i - 1].takenAt!, p.takenAt) : null));
+    const images: string[] = [];
+    for (const p of photos) images.push(await groupingImage(p.src));
+    for (const index of await detectSarees(images.map((image, i) => ({ image, gapSeconds: gaps[i] })))) starts.add(index);
   }
 
   const boundaries = [...starts].sort((a, b) => a - b);

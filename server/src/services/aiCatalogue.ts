@@ -190,13 +190,36 @@ export async function describeSaree(photos: string[], notes = ""): Promise<Listi
   return { ...d, shortDescription: clamp(d.shortDescription, 160), seoTitle: clamp(d.seoTitle, 70), seoDescription: clamp(d.seoDescription, 170) };
 }
 
-const CHUNK = 16;
+export type GroupingPhoto = { image: string; gapSeconds: number | null };
+
+// Three differently-sized window layouts; a boundary must be found by at least two of them (the AI is noisy run to run).
+const LAYOUTS = [
+  { window: 14, decide: 11 },
+  { window: 12, decide: 9 },
+  { window: 16, decide: 12 },
+];
+
+/** "3 min later", "40 sec later" ... for the prompt. */
+function describeGap(seconds: number | null) {
+  if (seconds === null) return "time unknown";
+  if (seconds < 90) return `${Math.max(0, Math.round(seconds))} sec after the previous photo`;
+  if (seconds < 5400) return `${Math.round(seconds / 60)} min after the previous photo`;
+  return "hours/days after the previous photo";
+}
+
+const GROUPING_RULES =
+  "When you are unsure, answer SAME saree: a wrongly split saree is worse than two sarees kept together, because staff can easily split a group but wasting a generation on a fragment costs money. " +
+  "You sort a shop's phone photos of sarees. The shop photographs one saree at a time, usually 3-10 photos each: the full saree laid out, then close-ups of the body, border, pallu and blouse piece, often on a different surface or in different light. " +
+  "ALL of those close-ups and angles are the SAME saree. Judge by the cloth itself: base colour, motif shape and spacing, border colour and width, zari. " +
+  "Say DIFFERENT only when the base colour or the weave/motif design is clearly not the same cloth. A change of angle, zoom, lighting, background or a folded vs. spread saree is NOT a different saree. " +
+  "The time gap between photos is a hint: photos of one saree are usually seconds apart (under a minute); under 30 seconds is very likely the same saree; a gap of several minutes usually means the next saree began, but is not proof on its own.";
 
 /**
  * Photos arrive in shooting order. Returns the indices where a new saree starts (always includes 0).
- * Looks at overlapping windows of small thumbnails, so each call only has to compare neighbours.
+ * Looks at overlapping windows of larger images plus the time gaps, so each call only compares neighbours.
  */
-export async function detectSareeStarts(thumbs: string[]): Promise<number[]> {
+async function detectSareeStarts(photos: GroupingPhoto[], layout: { window: number; decide: number }): Promise<number[]> {
+  const { window: WINDOW, decide: DECIDE } = layout;
   const ai = requireClient();
   const starts = new Set<number>([0]);
   const schema = {
@@ -206,25 +229,21 @@ export async function detectSareeStarts(thumbs: string[]): Promise<number[]> {
     properties: { starts: { type: "array", items: { type: "integer" }, description: "Photo numbers that show a DIFFERENT saree from the photo just before them." } },
   };
 
-  for (let s = 0; s < thumbs.length - 1; s += CHUNK - 1) {
-    const window = thumbs.slice(s, s + CHUNK);
+  for (let s = 0; s < photos.length - 1; s += DECIDE) {
+    const window = photos.slice(s, s + WINDOW);
+    const last = s + WINDOW >= photos.length;
     const completion = await ai.chat.completions.create({
       model: TEXT_MODEL,
       response_format: { type: "json_schema", json_schema: { name: "saree_boundaries", strict: true, schema } },
       messages: [
-        {
-          role: "system",
-          content:
-            "You sort a shop's phone photos of sarees. Photos are numbered in the order they were taken; the shop photographs one saree at a time, usually 3-10 photos each. " +
-            "Close-ups of the border, pallu, blouse piece or weave of the same saree count as the SAME saree. A different base colour or different motifs means a DIFFERENT saree.",
-        },
+        { role: "system", content: GROUPING_RULES },
         {
           role: "user",
           content: [
-            { type: "text", text: `There are ${window.length} photos, numbered 1 to ${window.length}. For each photo from 2 onwards, decide whether it shows a different saree from the photo just before it. Return those photo numbers.` },
-            ...window.flatMap((url, i) => [
-              { type: "text" as const, text: `Photo ${i + 1}:` },
-              { type: "image_url" as const, image_url: { url, detail: "low" as const } },
+            { type: "text", text: `There are ${window.length} photos in shooting order, numbered 1 to ${window.length}. For each photo from 2 onwards, decide whether it shows a DIFFERENT saree from the photo just before it. Return only those photo numbers.` },
+            ...window.flatMap((p, i) => [
+              { type: "text" as const, text: `Photo ${i + 1} (${i === 0 ? "first in this set" : describeGap(p.gapSeconds)}):` },
+              { type: "image_url" as const, image_url: { url: p.image, detail: "low" as const } },
             ]),
           ],
         },
@@ -233,9 +252,85 @@ export async function detectSareeStarts(thumbs: string[]): Promise<number[]> {
     const raw = completion.choices[0]?.message?.content;
     const result = z.object({ starts: z.array(z.number().int()) }).safeParse(raw ? JSON.parse(raw) : null);
     if (!result.success) throw new Error("The AI returned an unreadable grouping. Please try again.");
+    // Later photos in the window are only context for the next window, except in the final one.
+    const maxDecided = last ? window.length : DECIDE + 1;
     for (const n of result.data.starts) {
-      if (n >= 2 && n <= window.length) starts.add(s + n - 1);
+      if (n >= 2 && n <= maxDecided) starts.add(s + n - 1);
     }
   }
   return [...starts].sort((a, b) => a - b);
+}
+
+/**
+ * Second pass: for every pair of neighbouring groups, shows a few photos of each and asks if it is really
+ * one saree. Returns, per group, whether it should be joined onto the group before it.
+ */
+async function findSplitSarees(groups: { images: string[]; tail: string[]; gapSeconds: number | null }[]): Promise<boolean[]> {
+  const ai = requireClient();
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["sameSaree"],
+    properties: { sameSaree: { type: "boolean" } },
+  };
+  const joins: boolean[] = groups.map(() => false);
+
+  const check = async (i: number) => {
+    const [a, b] = [{ images: groups[i].tail }, groups[i]];
+    const completion = await ai.chat.completions.create({
+      model: TEXT_MODEL,
+      response_format: { type: "json_schema", json_schema: { name: "same_saree", strict: true, schema } },
+      messages: [
+        { role: "system", content: GROUPING_RULES },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: `Set A (${a.images.length} photos) and Set B (${b.images.length} photos) were split apart by an earlier pass. Set B starts ${describeGap(b.gapSeconds)}. Is Set B the SAME saree as Set A (just more angles/close-ups), or a different saree?` },
+            { type: "text", text: "Set A:" },
+            ...a.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "high" as const } })),
+            { type: "text", text: "Set B:" },
+            ...b.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "high" as const } })),
+          ],
+        },
+      ],
+    });
+    const raw = completion.choices[0]?.message?.content;
+    const result = z.object({ sameSaree: z.boolean() }).safeParse(raw ? JSON.parse(raw) : null);
+    if (!result.success) throw new Error("The AI returned an unreadable grouping. Please try again.");
+    joins[i] = result.data.sameSaree;
+  };
+
+  const queue = groups.map((_, i) => i).slice(1);
+  await Promise.all(
+    Array.from({ length: 3 }, async () => {
+      for (let i = queue.shift(); i !== undefined; i = queue.shift()) await check(i);
+    })
+  );
+  return joins;
+}
+
+/**
+ * Full pipeline: find where each saree starts, then repeatedly join neighbouring groups that look like one saree
+ * (compared using the photos nearest the boundary, which are the best evidence). Returns start indices.
+ */
+export async function detectSarees(photos: GroupingPhoto[]): Promise<number[]> {
+  const runs = await Promise.all(LAYOUTS.map((layout) => detectSareeStarts(photos, layout)));
+  const votes = new Map<number, number>();
+  for (const run of runs) for (const i of run) votes.set(i, (votes.get(i) ?? 0) + 1);
+  let starts = [...votes].filter(([i, n]) => i === 0 || n >= 2).map(([i]) => i).sort((a, b) => a - b);
+  for (let round = 0; round < 3 && starts.length > 1; round++) {
+    const ranges = starts.map((from, i) => ({ from, to: starts[i + 1] ?? photos.length }));
+    const joins = await findSplitSarees(
+      ranges.map((r, i) => ({
+        // Photos nearest the boundary: the end of the previous group is passed as the "A" side by the caller below.
+        images: photos.slice(r.from, Math.min(r.to, r.from + 3)).map((p) => p.image),
+        gapSeconds: photos[r.from].gapSeconds,
+        tail: i ? photos.slice(Math.max(ranges[i - 1].from, ranges[i - 1].to - 3), ranges[i - 1].to).map((p) => p.image) : [],
+      }))
+    );
+      const next = starts.filter((_, i) => !(i > 0 && joins[i] && ranges[i - 1].to - ranges[i - 1].from + (ranges[i].to - ranges[i].from) <= 16));
+    if (next.length === starts.length) break;
+    starts = next;
+  }
+  return starts;
 }
