@@ -313,7 +313,7 @@ export default function AdminImportBatch() {
         <section className="bg-white rounded-xl border border-charcoal/5 p-6 mb-5">
           <h2 className="text-sm font-semibold mb-1">3. Generate</h2>
           <p className="text-xs text-charcoal/50 mb-4">
-            Check the groups below first -- each group becomes one product. Generation creates 2 images (mannequin + zoom close-up) and the full listing per saree, saved as hidden drafts.
+            Check the groups below first -- each group becomes one product. Generation creates 1 mannequin photo (plus a zoomed crop of it) and the full listing per saree, saved as hidden drafts.
             Start with a small test run to check quality and cost before doing everything.
           </p>
           {activeTotal > 0 && (

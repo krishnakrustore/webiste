@@ -3,8 +3,8 @@ import { persistImage, readAsDataUrl, deleteUnusedAssets } from "../utils/imageS
 import { withUniqueSlug } from "../routes/products.js";
 import {
   openai,
-  SHOT_KINDS,
   generateShot,
+  makeZoom,
   describeSaree,
   detectSareeStarts,
   aiErrorMessage,
@@ -13,8 +13,8 @@ import {
   type Listing,
 } from "./aiCatalogue.js";
 
-// Each group makes 3 OpenAI calls at once (2 images + listing), so keep this low.
-const CONCURRENCY = Math.max(1, Number(process.env.IMPORT_CONCURRENCY) || 2);
+// Each group makes 2 OpenAI calls at once (1 image + listing).
+const CONCURRENCY = Math.max(1, Number(process.env.IMPORT_CONCURRENCY) || 3);
 const MAX_REFERENCE_PHOTOS = 8;
 const RATE_LIMIT_PAUSE_MS = 60_000;
 // Large batches will hit OpenAI rate limits; waiting and retrying is normal, not a failure.
@@ -156,17 +156,19 @@ async function processGroup(groupId: string) {
     const notes = group.batch.notes;
     const existing = group.productId ? await prisma.product.findUnique({ where: { id: group.productId }, include: { images: true } }) : null;
 
-    const [listing, ...shots] = await Promise.all([
+    const [listing, catalogue] = await Promise.all([
       existing ? Promise.resolve(null) : describeSaree(references, notes),
-      ...SHOT_KINDS.map((kind) => generateShot(references, kind, notes)),
+      generateShot(references, "Catalogue", notes),
     ]);
+    // Second picture is a zoomed crop of the first -- no second generation.
+    const zoom = await makeZoom(catalogue);
 
     const altFor = (kind: string, l: Listing | null) =>
       (kind === "Catalogue" ? l?.altCatalogue : l?.altZoom) || `${existing?.name ?? l?.name ?? "Saree"} -- ${kind.toLowerCase()}`;
-    const images: { src: string; alt: string; label: string; position: number }[] = [];
-    for (const [i, kind] of SHOT_KINDS.entries()) {
-      images.push({ src: await persistImage(shots[i]), alt: altFor(kind, listing), label: kind, position: i });
-    }
+    const images: { src: string; alt: string; label: string; position: number }[] = [
+      { src: await persistImage(catalogue), alt: altFor("Catalogue", listing), label: "Catalogue", position: 0 },
+      { src: await persistImage(zoom), alt: altFor("Zoom", listing), label: "Zoom", position: 1 },
+    ];
 
     let productId = existing?.id;
     if (existing) {

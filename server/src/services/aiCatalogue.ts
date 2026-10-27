@@ -1,4 +1,5 @@
 import OpenAI, { toFile } from "openai";
+import sharp from "sharp";
 import { z } from "zod";
 import { prisma } from "../db.js";
 
@@ -22,14 +23,32 @@ Show the finished drape the way a saree shop displays it: neat, evenly spaced pl
 Tall portrait framing, mannequin standing upright and centred in a three-quarter view, shot from slightly below so the whole drape is visible from the shoulder to the floor.
 Plain, seamless warm studio backdrop in a soft neutral tone that flatters the saree's colours (peach, beige or cream), with a gentle floor shadow.
 ${FIDELITY_RULES}`,
-  Zoom: `Create a premium e-commerce close-up (zoom) photograph of the EXACT saree shown in the reference photos.
-Frame it tightly so the fabric fills the whole picture edge to edge: the body of the saree with its woven motifs clearly visible in the upper part, and a folded section of the saree's border and pallu lying across the lower part, so the border's zari weave, its pattern and the meeting point of border and body are all shown in rich detail.
-Soft natural folds and creases, showing how the silk catches the light; the real thread texture, sheen and weave should be easy to see.
-Tall portrait framing. No mannequin, no background, no table, no floor: only fabric.
-${FIDELITY_RULES}`,
 } as const;
 
 export type ShotKind = keyof typeof SHOTS;
+
+// The zoom picture is not generated: it is cropped from the mannequin photo (no extra AI call or cost).
+// The box covers the body motifs and the border/pallu panel in the middle of the drape, as fractions of the image.
+const ZOOM_BOX = { left: 0.19, top: 0.26, size: 0.62 };
+
+/** Crops the zoomed-in view out of a generated mannequin photo; returns a webp data URL. */
+export async function makeZoom(dataUrl: string): Promise<string> {
+  const match = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(dataUrl);
+  if (!match) throw new Error("Invalid image");
+  const input = Buffer.from(match[1], "base64");
+  const { width, height } = await sharp(input).metadata();
+  if (!width || !height) throw new Error("Could not read the generated image");
+  const out = await sharp(input)
+    .extract({
+      left: Math.round(width * ZOOM_BOX.left),
+      top: Math.round(height * ZOOM_BOX.top),
+      width: Math.round(width * ZOOM_BOX.size),
+      height: Math.round(height * ZOOM_BOX.size),
+    })
+    .webp({ quality: 90 })
+    .toBuffer();
+  return `data:image/webp;base64,${out.toString("base64")}`;
+}
 export const SHOT_KINDS = Object.keys(SHOTS) as ShotKind[];
 
 function toUpload(dataUrl: string, i: number) {

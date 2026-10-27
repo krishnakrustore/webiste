@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/auth.js";
-import { openai, SHOTS, SHOT_KINDS, TEXT_MODEL, IMAGE_MODEL, generateShot, describeSaree, aiErrorMessage, type ShotKind } from "../services/aiCatalogue.js";
+import { openai, SHOTS, SHOT_KINDS, TEXT_MODEL, IMAGE_MODEL, generateShot, makeZoom, describeSaree, aiErrorMessage, type ShotKind } from "../services/aiCatalogue.js";
 
 export const aiRouter = Router();
 
@@ -32,6 +32,18 @@ aiRouter.post("/image", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("AI image error:", err);
     res.status(502).json({ error: aiErrorMessage(err) });
+  }
+});
+
+// The zoom picture is a crop of the generated photo -- needs no AI call, so it works without an API key too.
+aiRouter.post("/zoom", requireAdmin, async (req, res) => {
+  const parsed = z.object({ image: z.string().regex(/^data:image\/(jpeg|jpg|png|webp);base64,/i).max(8_000_000) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Send the photo to zoom into." });
+  try {
+    res.json({ src: await makeZoom(parsed.data.image) });
+  } catch (err) {
+    console.error("Zoom crop error:", err);
+    res.status(400).json({ error: "Could not crop that image." });
   }
 });
 

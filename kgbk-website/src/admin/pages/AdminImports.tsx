@@ -8,7 +8,7 @@ import { ApiError } from "../../api/client";
 const STEPS = [
   { icon: FolderOpen, title: "Upload", body: "Drop in all the photos from the pendrive. They're resized in your browser first." },
   { icon: Layers, title: "Group", body: "Photos are split into one group per saree -- by folder, or by AI in shooting order." },
-  { icon: Wand2, title: "Generate", body: "For each saree: a mannequin photo and a zoom close-up, plus title, description and SEO." },
+  { icon: Wand2, title: "Generate", body: "For each saree: one mannequin photo, a zoomed crop of it, plus title, description and SEO." },
   { icon: CheckCircle2, title: "Review & publish", body: "Everything arrives as hidden drafts. Check, edit and publish in bulk." },
 ];
 

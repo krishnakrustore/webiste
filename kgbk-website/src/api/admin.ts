@@ -6,7 +6,8 @@ export interface AiStatus {
   enabled: boolean;
   textModel: string;
   imageModel: string;
-  prompts: Record<AiShot, string>;
+  /** Only the generated photo has a prompt; the zoom is a crop of it. */
+  prompts: Record<string, string>;
 }
 
 export interface AiListing {
@@ -30,4 +31,5 @@ export const AiApi = {
   describe: (photos: string[], notes: string) => api.post<AiListing>("/ai/describe", { photos, notes }, true),
   image: (photos: string[], kind: AiShot, notes: string) =>
     api.post<{ kind: AiShot; src: string }>("/ai/image", { photos, kind, notes }, true),
+  zoom: (image: string) => api.post<{ src: string }>("/ai/zoom", { image }, true),
 };

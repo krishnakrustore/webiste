@@ -9,7 +9,7 @@ import { isSupportedPhoto, toBrowserImage } from "../../utils/photoFile";
 const SHOTS: AiShot[] = ["Catalogue", "Zoom"];
 const SHOT_HINT: Record<AiShot, string> = {
   Catalogue: "Saree draped on a mannequin",
-  Zoom: "Close-up of weave, motifs & border",
+  Zoom: "Zoomed in from the photo",
 };
 const MAX_PHOTOS = 10;
 
@@ -77,13 +77,22 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
     setShots((s) => ({ ...s, [kind]: { ...s[kind], ...patch } }));
   }
 
-  async function generateShot(kind: AiShot) {
-    patchShot(kind, { loading: true, error: undefined });
+  // One AI photo; the zoom is cropped from it (no second generation, no extra cost).
+  async function generateCatalogue() {
+    patchShot("Catalogue", { loading: true, error: undefined });
+    patchShot("Zoom", { loading: true, error: undefined, src: undefined });
     try {
-      const { src } = await AiApi.image(photoSrcs, kind, notes);
-      patchShot(kind, { src, loading: false, include: true });
+      const { src } = await AiApi.image(photoSrcs, "Catalogue", notes);
+      patchShot("Catalogue", { src, loading: false, include: true });
+      try {
+        const zoom = await AiApi.zoom(src);
+        patchShot("Zoom", { src: zoom.src, loading: false, include: true });
+      } catch (err) {
+        patchShot("Zoom", { loading: false, error: errorText(err) });
+      }
     } catch (err) {
-      patchShot(kind, { loading: false, error: errorText(err) });
+      patchShot("Catalogue", { loading: false, error: errorText(err) });
+      patchShot("Zoom", { loading: false });
     }
   }
 
@@ -99,7 +108,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
   function generateAll() {
     setApplied(false);
     void generateListing();
-    SHOTS.forEach((k) => void generateShot(k));
+    void generateCatalogue();
   }
 
   function apply() {
@@ -128,7 +137,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
           <span className="w-8 h-8 rounded-lg bg-wine text-ivory flex items-center justify-center"><Sparkles size={15} /></span>
           <span>
             <span className="block text-sm font-semibold">AI Catalogue Assistant</span>
-            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; a mannequin photo and a zoom close-up plus a full SEO listing out</span>
+            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; a mannequin photo, a zoomed close-up and a full SEO listing out</span>
           </span>
         </span>
         <ChevronDown size={16} className={`text-charcoal/40 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -211,7 +220,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
                             {s.src && <img src={s.src} alt={k} className={`absolute inset-0 w-full h-full object-cover ${s.include ? "" : "opacity-30"}`} />}
                             {s.loading && (
                               <div className="absolute inset-0 bg-ivory/70 flex flex-col items-center justify-center gap-2 text-xs text-charcoal/60">
-                                <Loader2 size={20} className="animate-spin text-wine" /> Creating {k.toLowerCase()}...
+                                <Loader2 size={20} className="animate-spin text-wine" /> {k === "Zoom" ? "Cropping zoom..." : "Creating photo..."}
                               </div>
                             )}
                             {!s.src && !s.loading && s.error && <p className="p-3 text-[11px] text-red-600 text-center">{s.error}</p>}
@@ -224,14 +233,19 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
                                 <input type="checkbox" disabled={!s.src} checked={s.include} onChange={(e) => patchShot(k, { include: e.target.checked })} className="accent-[#5c1626]" />
                                 Use
                               </label>
-                              <button
-                                type="button"
-                                disabled={s.loading || photos.length === 0}
-                                onClick={() => generateShot(k)}
-                                className="inline-flex items-center gap-1 text-[11px] text-wine hover:underline disabled:opacity-40"
-                              >
-                                <RefreshCw size={11} /> Redo
-                              </button>
+                              {k === "Catalogue" ? (
+                                <button
+                                  type="button"
+                                  disabled={s.loading || photos.length === 0}
+                                  onClick={generateCatalogue}
+                                  title="Generate the photo again (the zoom is cropped from the new one)"
+                                  className="inline-flex items-center gap-1 text-[11px] text-wine hover:underline disabled:opacity-40"
+                                >
+                                  <RefreshCw size={11} /> Redo
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-charcoal/40">auto-cropped</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -282,17 +296,17 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
   );
 }
 
-function ManualMode({ prompts, copied, onCopy }: { prompts: Record<AiShot, string>; copied: string; onCopy: (text: string, key: string) => void }) {
+function ManualMode({ prompts, copied, onCopy }: { prompts: Record<string, string>; copied: string; onCopy: (text: string, key: string) => void }) {
   return (
     <div className="rounded-lg bg-beige/40 border border-gold/30 p-4 space-y-3">
       <p className="text-sm font-semibold">Automatic generation isn&rsquo;t switched on yet</p>
       <p className="text-xs text-charcoal/60 leading-relaxed">
         It needs an OpenAI <strong>API</strong> key on the server (<code>OPENAI_API_KEY</code>). A ChatGPT Plus/Pro subscription doesn&rsquo;t
         include API access -- that&rsquo;s billed separately at platform.openai.com. Until then, use ChatGPT directly: attach the same photos,
-        paste each prompt below, download the result, then upload it in the Images section and set its label.
+        paste the prompt below, download the result, then upload it in the Images section. For the zoomed picture, simply crop into that photo yourself.
       </p>
       <div className="flex flex-wrap gap-2">
-        {SHOTS.map((k) => (
+        {Object.keys(prompts).map((k) => (
           <button key={k} type="button" onClick={() => onCopy(prompts[k], k)} className="inline-flex items-center gap-1.5 rounded-full border border-charcoal/15 bg-white px-3.5 py-1.5 text-xs hover:border-gold">
             {copied === k ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />} {k} image prompt
           </button>
