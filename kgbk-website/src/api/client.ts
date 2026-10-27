@@ -47,6 +47,12 @@ async function request<T>(path: string, options: RequestInit = {}, auth: Auth = 
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const body = isJson ? await res.json() : undefined;
 
+  if (res.status === 401 && auth === true) {
+    // The saved admin login expired (they last 7 days) or was issued by another server: clear it and send them to log in again.
+    setAdminToken(null);
+    if (!window.location.pathname.startsWith("/admin/login")) window.location.assign("/admin/login?expired=1");
+  }
+
   if (!res.ok) {
     throw new ApiError(res.status, (body as { error?: string })?.error ?? `Request failed (${res.status})`);
   }

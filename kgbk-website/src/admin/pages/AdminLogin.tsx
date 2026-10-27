@@ -9,7 +9,9 @@ export default function AdminLogin() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() =>
+    new URLSearchParams(window.location.search).has("expired") ? "Your login expired. Please log in again." : ""
+  );
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
