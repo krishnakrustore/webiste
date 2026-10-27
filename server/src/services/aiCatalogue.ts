@@ -17,15 +17,15 @@ Ignore everything in the reference photos that is not the saree: people, hands, 
 Photorealistic, sharp fabric detail, true-to-life colours, soft even studio lighting. No people, no text, no logos, no watermarks, no borders around the image.`;
 
 export const SHOTS = {
-  Catalogue: `Create a premium e-commerce product photograph of the EXACT saree shown in the reference photos, draped on a headless ivory dress-form mannequin (no human model).
-Drape: classic Nivi style with neat, evenly spaced pleats down the front, the decorated border running along the pleats, and the pallu over the left shoulder falling and gently fanned out to the side so its full design is visible.
-Full-length, front three-quarter view, mannequin centred, plain warm beige studio backdrop with a soft shadow.
+  Catalogue: `Create a premium e-commerce catalogue photograph of the EXACT saree shown in the reference photos, draped on a standing dress-form mannequin (no human model, no face).
+Show the finished drape the way a saree shop displays it: neat, evenly spaced pleats falling down the front of the mannequin, the saree's border running down along the pleat edge, and the pallu brought over the shoulder and hanging down the front in a folded panel so its wide border is clearly visible, with the remaining pallu falling to the floor and spreading out on the right.
+Tall portrait framing, mannequin standing upright and centred in a three-quarter view, shot from slightly below so the whole drape is visible from the shoulder to the floor.
+Plain, seamless warm studio backdrop in a soft neutral tone that flatters the saree's colours (peach, beige or cream), with a gentle floor shadow.
 ${FIDELITY_RULES}`,
-  Detail: `Create a premium e-commerce detail photograph of the EXACT saree shown in the reference photos, folded flat in layers so the body with its motifs, the full border and the start of the pallu are all visible side by side.
-Gentle, natural folds; slightly angled top-down view; the fabric fills most of the frame; a little plain warm cream surface visible at the edge.
-${FIDELITY_RULES}`,
-  Pallu: `Create a premium e-commerce photograph of the EXACT saree shown in the reference photos, with the body gathered into a neat fan of accordion pleats on the left (the border visible along the pleat edges) and the pallu spread flat on the right so its complete design and border are clearly visible.
-Slightly angled top-down view, the fabric fills most of the frame.
+  Zoom: `Create a premium e-commerce close-up (zoom) photograph of the EXACT saree shown in the reference photos.
+Frame it tightly so the fabric fills the whole picture edge to edge: the body of the saree with its woven motifs clearly visible in the upper part, and a folded section of the saree's border and pallu lying across the lower part, so the border's zari weave, its pattern and the meeting point of border and body are all shown in rich detail.
+Soft natural folds and creases, showing how the silk catches the light; the real thread texture, sheen and weave should be easy to see.
+Tall portrait framing. No mannequin, no background, no table, no floor: only fabric.
 ${FIDELITY_RULES}`,
 } as const;
 
@@ -98,8 +98,7 @@ export const listingSchema = z.object({
   seoTitle: z.string(),
   seoDescription: z.string(),
   altCatalogue: z.string(),
-  altDetail: z.string(),
-  altPallu: z.string(),
+  altZoom: z.string(),
 });
 export type Listing = z.infer<typeof listingSchema>;
 
@@ -136,8 +135,7 @@ export async function describeSaree(photos: string[], notes = ""): Promise<Listi
       seoTitle: text("Under 60 characters, lead with the key search phrase, e.g. 'Black Tussar Silk Saree with Floral Zari Border'."),
       seoDescription: text("140-155 characters, natural sentence with the main keywords, ending with 'Shop at Krishna Gari Battala Kottu, Hyderabad.' if it fits."),
       altCatalogue: text("Image alt text for the saree draped on a mannequin, under 125 characters."),
-      altDetail: text("Image alt text for the folded close-up showing body, border and pallu, under 125 characters."),
-      altPallu: text("Image alt text for the pleated saree with the pallu spread out, under 125 characters."),
+      altZoom: text("Image alt text for the close-up showing the weave, motifs and border, under 125 characters."),
     },
   };
 

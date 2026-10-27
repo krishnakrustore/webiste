@@ -13,7 +13,7 @@ import {
   type Listing,
 } from "./aiCatalogue.js";
 
-// Each group makes 4 OpenAI calls at once (3 images + listing), so keep this low.
+// Each group makes 3 OpenAI calls at once (2 images + listing), so keep this low.
 const CONCURRENCY = Math.max(1, Number(process.env.IMPORT_CONCURRENCY) || 2);
 const MAX_REFERENCE_PHOTOS = 8;
 const RATE_LIMIT_PAUSE_MS = 60_000;
@@ -162,7 +162,7 @@ async function processGroup(groupId: string) {
     ]);
 
     const altFor = (kind: string, l: Listing | null) =>
-      (kind === "Catalogue" ? l?.altCatalogue : kind === "Detail" ? l?.altDetail : l?.altPallu) || `${existing?.name ?? l?.name ?? "Saree"} -- ${kind.toLowerCase()}`;
+      (kind === "Catalogue" ? l?.altCatalogue : l?.altZoom) || `${existing?.name ?? l?.name ?? "Saree"} -- ${kind.toLowerCase()}`;
     const images: { src: string; alt: string; label: string; position: number }[] = [];
     for (const [i, kind] of SHOT_KINDS.entries()) {
       images.push({ src: await persistImage(shots[i]), alt: altFor(kind, listing), label: kind, position: i });

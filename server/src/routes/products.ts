@@ -14,7 +14,8 @@ import {
 
 export const productsRouter = Router();
 
-export const IMAGE_LABELS = ["", "Catalogue", "Blouse", "Pallu", "Detail"] as const;
+// Zoom is the AI close-up; Blouse/Pallu/Detail are kept for existing products and manual uploads.
+export const IMAGE_LABELS = ["", "Catalogue", "Zoom", "Blouse", "Pallu", "Detail"] as const;
 
 const imageSchema = z.object({
   src: z.string().min(1),

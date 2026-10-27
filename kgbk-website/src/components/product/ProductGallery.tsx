@@ -4,8 +4,8 @@ import { X, ZoomIn } from "lucide-react";
 import type { ProductImage } from "../../types/product";
 
 function ShotBadge({ label, small = false }: { label?: string; small?: boolean }) {
-  // The catalogue/model shot is self-explanatory; badges mark the detail shots, as on the physical tags.
-  if (!label || label === "Catalogue") return null;
+  // The main drape shot and the zoom close-up speak for themselves; badges mark other labelled shots (Pallu, Blouse...).
+  if (!label || label === "Catalogue" || label === "Zoom") return null;
   return (
     <span className={`absolute z-10 pointer-events-none font-bold uppercase tracking-wider bg-emerald-800/90 text-ivory rounded ${small ? "top-1 left-1 text-[8px] px-1 py-px" : "top-3 left-3 text-[11px] px-2 py-1"}`}>
       {label}

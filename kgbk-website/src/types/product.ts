@@ -1,7 +1,7 @@
 export type Availability = "Available" | "Made to Order" | "Sold Out";
 export type ProductStatus = "draft" | "published";
 
-export const IMAGE_LABELS = ["Catalogue", "Blouse", "Pallu", "Detail"] as const;
+export const IMAGE_LABELS = ["Catalogue", "Zoom", "Blouse", "Pallu", "Detail"] as const;
 export type ImageLabel = (typeof IMAGE_LABELS)[number] | "";
 
 export interface ProductImage {

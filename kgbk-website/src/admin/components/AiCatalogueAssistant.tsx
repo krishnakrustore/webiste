@@ -6,11 +6,10 @@ import type { ProductImage } from "../../types/product";
 import { compressImage } from "../../utils/image";
 import { isSupportedPhoto, toBrowserImage } from "../../utils/photoFile";
 
-const SHOTS: AiShot[] = ["Catalogue", "Detail", "Pallu"];
+const SHOTS: AiShot[] = ["Catalogue", "Zoom"];
 const SHOT_HINT: Record<AiShot, string> = {
-  Catalogue: "Draped on a mannequin",
-  Detail: "Folded: body, border & pallu",
-  Pallu: "Pleats with the pallu spread",
+  Catalogue: "Saree draped on a mannequin",
+  Zoom: "Close-up of weave, motifs & border",
 };
 const MAX_PHOTOS = 10;
 
@@ -29,8 +28,7 @@ SEO description: (140-155 characters)`;
 type ShotState = { src?: string; loading: boolean; error?: string; include: boolean };
 const emptyShots = (): Record<AiShot, ShotState> => ({
   Catalogue: { loading: false, include: true },
-  Detail: { loading: false, include: true },
-  Pallu: { loading: false, include: true },
+  Zoom: { loading: false, include: true },
 });
 
 const errorText = (err: unknown) => (err instanceof ApiError ? err.message : "Request failed. Check your connection and try again.");
@@ -106,7 +104,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
 
   function apply() {
     const d = listing.data;
-    const altFor: Record<AiShot, string | undefined> = { Catalogue: d?.altCatalogue, Detail: d?.altDetail, Pallu: d?.altPallu };
+    const altFor: Record<AiShot, string | undefined> = { Catalogue: d?.altCatalogue, Zoom: d?.altZoom };
     const images: ProductImage[] = SHOTS.filter((k) => shots[k].src && shots[k].include).map((k) => ({
       id: `ai-${k}-${Date.now()}`,
       src: shots[k].src!,
@@ -130,7 +128,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
           <span className="w-8 h-8 rounded-lg bg-wine text-ivory flex items-center justify-center"><Sparkles size={15} /></span>
           <span>
             <span className="block text-sm font-semibold">AI Catalogue Assistant</span>
-            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; mannequin, fold and pallu shots plus a full SEO listing out</span>
+            <span className="block text-xs text-charcoal/50">Phone photos in &rarr; a mannequin photo and a zoom close-up plus a full SEO listing out</span>
           </span>
         </span>
         <ChevronDown size={16} className={`text-charcoal/40 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -204,7 +202,7 @@ export default function AiCatalogueAssistant({ onApply, defaultOpen = true }: Pr
 
               {(hasResults || busy) && (
                 <>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3 max-w-md">
                     {SHOTS.map((k) => {
                       const s = shots[k];
                       return (

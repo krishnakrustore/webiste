@@ -1,6 +1,6 @@
 import { api } from "./client";
 
-export type AiShot = "Catalogue" | "Detail" | "Pallu";
+export type AiShot = "Catalogue" | "Zoom";
 
 export interface AiStatus {
   enabled: boolean;
@@ -22,8 +22,7 @@ export interface AiListing {
   seoTitle: string;
   seoDescription: string;
   altCatalogue: string;
-  altDetail: string;
-  altPallu: string;
+  altZoom: string;
 }
 
 export const AiApi = {
