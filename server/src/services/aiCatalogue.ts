@@ -29,7 +29,7 @@ export type ShotKind = keyof typeof SHOTS;
 
 // The zoom picture is not generated: it is cropped from the mannequin photo (no extra AI call or cost).
 // The box is a tight close-up on the mannequin's bent hand holding the pallu, with the pallu border and body weave around it, as fractions of the image.
-const ZOOM_BOX = { left: 0.25, top: 0.11, size: 0.42 };
+const ZOOM_BOX = { left: 0.29, top: 0.14, width: 0.36, height: 0.22 };
 
 /** Crops the zoomed-in view out of a generated mannequin photo; returns a webp data URL. */
 export async function makeZoom(dataUrl: string): Promise<string> {
@@ -42,9 +42,10 @@ export async function makeZoom(dataUrl: string): Promise<string> {
     .extract({
       left: Math.round(width * ZOOM_BOX.left),
       top: Math.round(height * ZOOM_BOX.top),
-      width: Math.round(width * ZOOM_BOX.size),
-      height: Math.round(height * ZOOM_BOX.size),
+      width: Math.round(width * ZOOM_BOX.width),
+      height: Math.round(height * ZOOM_BOX.height),
     })
+    .resize({ width: 800, kernel: "lanczos3" })
     .webp({ quality: 90 })
     .toBuffer();
   return `data:image/webp;base64,${out.toString("base64")}`;

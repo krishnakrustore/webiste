@@ -65,7 +65,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35 }}
-              className="absolute inset-0 w-full h-full object-cover"
+              className={`absolute inset-0 w-full h-full ${current?.label === "Zoom" ? "object-contain" : "object-cover"}`}
             />
           </AnimatePresence>
           {zooming && (
@@ -100,7 +100,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
         aria-label="View fullscreen"
         className="relative flex-1 aspect-[2/3] rounded-sm overflow-hidden bg-beige md:hidden"
       >
-        <img src={current?.src} alt={current?.alt} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={current?.src} alt={current?.alt} className={`absolute inset-0 w-full h-full ${current?.label === "Zoom" ? "object-contain" : "object-cover"}`} />
         <ShotBadge label={current?.label} />
       </button>
 
