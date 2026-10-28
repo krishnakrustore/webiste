@@ -20,6 +20,8 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
   const [zooming, setZooming] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const current = images[active];
+  // The zoom close-up is a landscape crop (about 369x338); give it a matching frame so it fills it with no bars.
+  const frameAspect = current?.label === "Zoom" ? "aspect-[369/338]" : "aspect-[2/3]";
 
   function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
     const rect = frameRef.current?.getBoundingClientRect();
@@ -49,7 +51,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
       <div className="relative flex-1 hidden md:block">
         <div
           ref={frameRef}
-          className="relative aspect-[2/3] rounded-sm overflow-hidden bg-beige group"
+          className={`relative ${frameAspect} rounded-sm overflow-hidden bg-beige group`}
           style={{ cursor: "zoom-in" }}
           onMouseEnter={() => setZooming(true)}
           onMouseLeave={() => setZooming(false)}
@@ -65,7 +67,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35 }}
-              className={`absolute inset-0 w-full h-full ${current?.label === "Zoom" ? "object-contain" : "object-cover"}`}
+              className={`absolute inset-0 w-full h-full object-cover`}
             />
           </AnimatePresence>
           {zooming && (
@@ -83,7 +85,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
         {/* Side zoom panel -- classic e-commerce magnifier, appears beside the image on wide screens */}
         {zooming && current && (
           <div
-            className="hidden lg:block absolute top-0 left-[calc(100%+1.5rem)] w-full aspect-[2/3] rounded-sm overflow-hidden border border-charcoal/10 shadow-xl bg-beige z-20"
+            className={`hidden lg:block absolute top-0 left-[calc(100%+1.5rem)] w-full ${frameAspect} rounded-sm overflow-hidden border border-charcoal/10 shadow-xl bg-beige z-20`}
             style={{
               backgroundImage: `url(${current.src})`,
               backgroundSize: "200%",
@@ -98,9 +100,9 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
       <button
         onClick={() => setFullscreen(true)}
         aria-label="View fullscreen"
-        className="relative flex-1 aspect-[2/3] rounded-sm overflow-hidden bg-beige md:hidden"
+        className={`relative flex-1 ${frameAspect} rounded-sm overflow-hidden bg-beige md:hidden`}
       >
-        <img src={current?.src} alt={current?.alt} className={`absolute inset-0 w-full h-full ${current?.label === "Zoom" ? "object-contain" : "object-cover"}`} />
+        <img src={current?.src} alt={current?.alt} className={`absolute inset-0 w-full h-full object-cover`} />
         <ShotBadge label={current?.label} />
       </button>
 
