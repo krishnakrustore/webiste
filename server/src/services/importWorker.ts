@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { prisma } from "../db.js";
+import { copyPhotoToProduct } from "./importProductPhotos.js";
 import { persistImage, readAsDataUrl, deleteUnusedAssets } from "../utils/imageStore.js";
 import { withUniqueSlug } from "../routes/products.js";
 import {
@@ -176,9 +177,13 @@ async function processGroup(groupId: string) {
 
     const altFor = (kind: string, l: Listing | null) =>
       (kind === "Catalogue" ? l?.altCatalogue : l?.altZoom) || `${existing?.name ?? l?.name ?? "Saree"} -- ${kind.toLowerCase()}`;
-    const images: { src: string; alt: string; label: string; position: number }[] = [
+    // Order: generated photo, then the source photos the admin ticked, then the zoom.
+    const chosen = group.photos.filter((p) => p.include);
+    const productName = existing?.name ?? listing?.name ?? "Saree";
+    const images: { src: string; alt: string; label: string; position: number; importPhotoId?: string }[] = [
       { src: await persistImage(catalogue), alt: altFor("Catalogue", listing), label: "Catalogue", position: 0 },
-      { src: await persistImage(zoom), alt: altFor("Zoom", listing), label: "Zoom", position: 1 },
+      ...(await Promise.all(chosen.map(async (p, i) => ({ ...(await copyPhotoToProduct("", p, `${productName} -- photo ${i + 1}`)), position: 1 + i })))),
+      { src: await persistImage(zoom), alt: altFor("Zoom", listing), label: "Zoom", position: 1 + chosen.length },
     ];
 
     let productId = existing?.id;

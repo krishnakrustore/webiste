@@ -1,5 +1,6 @@
 import { Router, type Request } from "express";
 import { z } from "zod";
+import { addPhotoToProduct, removePhotoFromProduct } from "../services/importProductPhotos.js";
 import { prisma } from "../db.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { persistImage, deleteUnusedAssets, publicSrc, ImageValidationError } from "../utils/imageStore.js";
@@ -40,8 +41,9 @@ importRouter.patch("/batches/:id", async (req, res) => {
   res.json(await prisma.importBatch.update({ where: { id: req.params.id }, data: parsed.data }));
 });
 
-const photoView = (req: Request, p: { id: string; name: string; folder: string; thumb: string; src: string }) => ({
+const photoView = (req: Request, p: { id: string; name: string; folder: string; thumb: string; src: string; include: boolean }) => ({
   id: p.id,
+  include: p.include,
   name: p.name,
   folder: p.folder,
   thumb: publicSrc(req, p.thumb),
@@ -254,6 +256,17 @@ importRouter.post("/photos/:id/move", async (req, res) => {
     await prisma.importGroup.delete({ where: { id: photo.group.id } });
     await renumber(photo.batchId);
   }
+  res.json({ ok: true });
+});
+
+// Ticks a photo to appear in the product gallery; updates the product too if it already exists.
+importRouter.patch("/photos/:id", async (req, res) => {
+  const photo = await prisma.importPhoto.findUnique({ where: { id: req.params.id }, include: { group: true } });
+  if (!photo) return res.status(404).json({ error: "Photo not found" });
+  const include = req.body?.include === true;
+  await prisma.importPhoto.update({ where: { id: photo.id }, data: { include } });
+  const productId = photo.group?.productId;
+  if (productId) await (include ? addPhotoToProduct(productId, photo) : removePhotoFromProduct(productId, photo.id));
   res.json({ ok: true });
 });
 

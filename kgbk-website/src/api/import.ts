@@ -23,6 +23,7 @@ export interface ImportPhotoView {
   folder: string;
   thumb: string;
   src: string;
+  include: boolean;
 }
 
 export interface ImportGroupView {
@@ -63,5 +64,6 @@ export const ImportApi = {
   skip: (groupId: string, skipped: boolean) => api.post(`/import/groups/${groupId}/skip`, { skipped }, true),
   retry: (groupId: string) => api.post(`/import/groups/${groupId}/retry`, undefined, true),
   removePhoto: (photoId: string) => api.delete(`/import/photos/${photoId}`, true),
+  setInclude: (photoId: string, include: boolean) => api.patch(`/import/photos/${photoId}`, { include }, true),
   movePhoto: (photoId: string, position: number) => api.post(`/import/photos/${photoId}/move`, { position }, true),
 };

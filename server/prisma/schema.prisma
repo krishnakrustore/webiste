@@ -50,6 +50,8 @@ model ProductImage {
   // "Catalogue" | "Blouse" | "Pallu" | "Detail" | "" (unlabelled)
   label     String  @default("")
   position  Int     @default(0)
+  // Set when this is a copy of a bulk-import source photo the admin chose to show.
+  importPhotoId String?
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
 }
@@ -233,6 +235,8 @@ model ImportPhoto {
   takenAt  String       @default("")
   src      String
   thumb    String
+  // Admin ticked this photo to appear in the product gallery (between the generated photo and the zoom).
+  include  Boolean      @default(false)
 
   @@unique([batchId, folder, name])
   @@index([batchId, position])

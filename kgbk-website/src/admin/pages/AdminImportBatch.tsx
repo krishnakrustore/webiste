@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FolderOpen, Images, Loader2, Scissors, X, Merge, EyeOff, Eye, RefreshCw, Pause, Play, Trash2, Wand2, ExternalLink, MoveRight } from "lucide-react";
+import { ArrowLeft, FolderOpen, Images, Loader2, Scissors, X, Merge, EyeOff, Eye, RefreshCw, Pause, Play, Trash2, Wand2, ExternalLink, MoveRight, Check } from "lucide-react";
 import { ImportApi, type ImportBatchDetail, type ImportGroupView, type GroupingMode, type GroupStatus } from "../../api/import";
 import { ApiError } from "../../api/client";
 import { compressImage } from "../../utils/image";
@@ -313,7 +313,7 @@ export default function AdminImportBatch() {
         <section className="bg-white rounded-xl border border-charcoal/5 p-6 mb-5">
           <h2 className="text-sm font-semibold mb-1">3. Generate</h2>
           <p className="text-xs text-charcoal/50 mb-4">
-            Check the groups below first -- each group becomes one product. Generation creates 1 mannequin photo (plus a zoomed crop of it) and the full listing per saree, saved as hidden drafts.
+            Check the groups below first -- each group becomes one product. Generation creates 1 mannequin photo (plus a zoomed crop of it) and the full listing per saree, saved as hidden drafts. Tick (✓) any of your own photos below to also show them in the product, between the generated photo and the zoom.
             Start with a small test run to check quality and cost before doing everything.
           </p>
           {activeTotal > 0 && (
@@ -432,10 +432,19 @@ function GroupCard({ group: g, isFirst, busy, act }: { group: ImportGroupView; i
       <div className="flex flex-wrap gap-4">
         <div className="flex flex-wrap gap-2">
           {g.photos.map((p, i) => (
-            <div key={p.id} className="relative w-16 h-20 rounded-md overflow-hidden bg-beige group/photo">
+            <div key={p.id} className={`relative w-16 h-20 rounded-md overflow-hidden bg-beige group/photo ${p.include ? "ring-2 ring-gold" : ""}`}>
               <a href={p.src} target="_blank" rel="noopener noreferrer" title={`${p.folder ? `${p.folder}/` : ""}${p.name}`}>
                 <img src={p.thumb} alt="" loading="lazy" className="w-full h-full object-cover" />
               </a>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => act(() => ImportApi.setInclude(p.id, !p.include))}
+                title={p.include ? "Shown in the product gallery (click to remove)" : "Also show this photo in the product gallery"}
+                className={`absolute bottom-0.5 right-0.5 w-5 h-5 rounded flex items-center justify-center transition-opacity ${p.include ? "bg-gold text-charcoal opacity-100" : "bg-charcoal/75 text-ivory opacity-0 group-hover/photo:opacity-100"}`}
+              >
+                <Check size={12} />
+              </button>
               {editable && (
                 <div className="absolute inset-x-0 top-0 flex justify-between p-0.5 opacity-0 group-hover/photo:opacity-100 transition-opacity">
                   {i > 0 ? (
