@@ -290,9 +290,9 @@ async function findSplitSarees(groups: { images: string[]; tail: string[]; gapSe
           content: [
             { type: "text", text: `Set A (${a.images.length} photos) and Set B (${b.images.length} photos) were split apart by an earlier pass. Set B starts ${describeGap(b.gapSeconds)}. Is Set B the SAME saree as Set A (just more angles/close-ups), or a different saree?` },
             { type: "text", text: "Set A:" },
-            ...a.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "high" as const } })),
+            ...a.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "low" as const } })),
             { type: "text", text: "Set B:" },
-            ...b.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "high" as const } })),
+            ...b.images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "low" as const } })),
           ],
         },
       ],
@@ -321,7 +321,7 @@ export async function detectSarees(photos: GroupingPhoto[]): Promise<number[]> {
   const votes = new Map<number, number>();
   for (const run of runs) for (const i of run) votes.set(i, (votes.get(i) ?? 0) + 1);
   let starts = [...votes].filter(([i, n]) => i === 0 || n >= 2).map(([i]) => i).sort((a, b) => a - b);
-  for (let round = 0; round < 3 && starts.length > 1; round++) {
+  for (let round = 0; round < 2 && starts.length > 1; round++) {
     const ranges = starts.map((from, i) => ({ from, to: starts[i + 1] ?? photos.length }));
     const joins = await findSplitSarees(
       ranges.map((r, i) => ({
