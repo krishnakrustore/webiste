@@ -18,7 +18,7 @@ Ignore everything in the reference photos that is not the saree: people, hands, 
 Photorealistic, sharp fabric detail, true-to-life colours, soft even studio lighting. No people, no text, no logos, no watermarks, no borders around the image.`;
 
 export const SHOTS = {
-  Catalogue: `Create a premium e-commerce catalogue photograph of the EXACT saree shown in the reference photos, draped on a standing shop mannequin: a beige torso form with a slim arm hanging straight down on one side and the other arm bent at the elbow with the pallu resting over the forearm; the hands never grip, pinch or cover the cloth, and no hand sits in front of the saree's design, and a turned wooden finial on top of the neck instead of a head (no human model, no face).
+  Catalogue: `Create a premium e-commerce catalogue photograph of the EXACT saree shown in the reference photos, draped on a standing shop mannequin: a beige torso form with a slim arm hanging straight down on one side and the other arm bent at the elbow with its hand at waist height in front of the body, lightly holding the folded pallu panel exactly as in a shop display (the hand is visible; the other hand hangs at the side clear of the saree), and a turned wooden finial on top of the neck instead of a head (no human model, no face).
 Show the finished drape the way a saree shop displays it: the pallu comes over the shoulder as a wide diagonal band across the chest with its border running along both edges, the saree's front is gathered into neat, evenly spaced pleats falling straight to the floor, and the rest of the pallu hangs from the bent arm in a long folded panel so its border, stripes and woven design are clearly visible, spreading onto the floor at the bottom right. The saree's bottom border shows along the hem.
 Tall portrait framing, mannequin standing upright and centred in a slight three-quarter view, the ENTIRE mannequin must be inside the frame with clear empty margin above the wooden finial and below the hem and fallen pallu: nothing cropped or cut off at any edge.
 Plain, seamless studio backdrop with a gentle floor shadow. Pick a backdrop that contrasts with the saree so it stands out, and vary it by saree: mid or light grey, taupe, soft sage, dusty blue, cream or warm beige. Do NOT default to orange, peach or yellow; use those only if the saree is cool-toned or dark.
@@ -28,8 +28,8 @@ ${FIDELITY_RULES}`,
 export type ShotKind = keyof typeof SHOTS;
 
 // The zoom picture is not generated: it is cropped from the mannequin photo (no extra AI call or cost).
-// The box sits below the mannequin's hands and covers the pleats, border and pallu panel in the lower part of the drape, as fractions of the image.
-const ZOOM_BOX = { left: 0.28, top: 0.44, size: 0.5 };
+// The box is a tight close-up on the mannequin's bent hand holding the pallu, with the pallu border and body weave around it, as fractions of the image.
+const ZOOM_BOX = { left: 0.33, top: 0.19, size: 0.4 };
 
 /** Crops the zoomed-in view out of a generated mannequin photo; returns a webp data URL. */
 export async function makeZoom(dataUrl: string): Promise<string> {
