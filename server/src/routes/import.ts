@@ -113,7 +113,7 @@ importRouter.post("/batches/:id/photos", async (req, res) => {
     for (const p of parsed.data.photos) {
       const exists = await prisma.importPhoto.findUnique({ where: { batchId_folder_name: { batchId: batch.id, folder: p.folder, name: p.name } }, select: { id: true } });
       if (exists) continue;
-      const [src, thumb] = [await persistImage(p.src), await persistImage(p.thumb)];
+      const [src, thumb] = [await persistImage(p.src, "private"), await persistImage(p.thumb, "private")];
       await prisma.importPhoto.create({ data: { batchId: batch.id, name: p.name, folder: p.folder, takenAt: p.takenAt, src, thumb, position: position++ } });
       added++;
     }

@@ -4,3 +4,5 @@ dist
 prisma/dev.db
 prisma/dev.db-journal
 prisma/schema.local.prisma
+
+.push-state.json
