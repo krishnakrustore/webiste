@@ -20,8 +20,8 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
   const [zooming, setZooming] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const current = images[active];
-  // The zoom close-up is a landscape crop (about 369x338); give it a matching frame so it fills it with no bars.
-  const frameAspect = current?.label === "Zoom" ? "aspect-[369/338]" : "aspect-[2/3]";
+  // The zoom close-up is a portrait crop (about 471x645); give it a matching frame so it fills it with no bars.
+  const frameAspect = current?.label === "Zoom" ? "aspect-[471/645]" : "aspect-[2/3]";
 
   function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
     const rect = frameRef.current?.getBoundingClientRect();
