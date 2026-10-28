@@ -20,7 +20,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
       transition={{ duration: 0.55, delay: (index % 4) * 0.06 }}
       className="group"
     >
-      <div className="relative overflow-hidden rounded-sm bg-beige aspect-[4/5]">
+      <div className="relative overflow-hidden rounded-sm bg-beige aspect-[2/3]">
         <Link to={href} className="absolute inset-0 block">
           {cover && (
             <img

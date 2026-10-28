@@ -49,7 +49,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
       <div className="relative flex-1 hidden md:block">
         <div
           ref={frameRef}
-          className="relative aspect-[4/5] rounded-sm overflow-hidden bg-beige group"
+          className="relative aspect-[2/3] rounded-sm overflow-hidden bg-beige group"
           style={{ cursor: "zoom-in" }}
           onMouseEnter={() => setZooming(true)}
           onMouseLeave={() => setZooming(false)}
@@ -83,7 +83,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
         {/* Side zoom panel -- classic e-commerce magnifier, appears beside the image on wide screens */}
         {zooming && current && (
           <div
-            className="hidden lg:block absolute top-0 left-[calc(100%+1.5rem)] w-full aspect-[4/5] rounded-sm overflow-hidden border border-charcoal/10 shadow-xl bg-beige z-20"
+            className="hidden lg:block absolute top-0 left-[calc(100%+1.5rem)] w-full aspect-[2/3] rounded-sm overflow-hidden border border-charcoal/10 shadow-xl bg-beige z-20"
             style={{
               backgroundImage: `url(${current.src})`,
               backgroundSize: "200%",
@@ -98,7 +98,7 @@ export default function ProductGallery({ images }: { images: ProductImage[] }) {
       <button
         onClick={() => setFullscreen(true)}
         aria-label="View fullscreen"
-        className="relative flex-1 aspect-[4/5] rounded-sm overflow-hidden bg-beige md:hidden"
+        className="relative flex-1 aspect-[2/3] rounded-sm overflow-hidden bg-beige md:hidden"
       >
         <img src={current?.src} alt={current?.alt} className="absolute inset-0 w-full h-full object-cover" />
         <ShotBadge label={current?.label} />

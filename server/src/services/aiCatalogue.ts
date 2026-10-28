@@ -18,10 +18,10 @@ Ignore everything in the reference photos that is not the saree: people, hands, 
 Photorealistic, sharp fabric detail, true-to-life colours, soft even studio lighting. No people, no text, no logos, no watermarks, no borders around the image.`;
 
 export const SHOTS = {
-  Catalogue: `Create a premium e-commerce catalogue photograph of the EXACT saree shown in the reference photos, draped on a standing dress-form mannequin (no human model, no face).
-Show the finished drape the way a saree shop displays it: neat, evenly spaced pleats falling down the front of the mannequin, the saree's border running down along the pleat edge, and the pallu brought over the shoulder and hanging down the front in a folded panel so its wide border is clearly visible, with the remaining pallu falling to the floor and spreading out on the right.
-Tall portrait framing, mannequin standing upright and centred in a three-quarter view, shot from slightly below so the whole drape is visible from the shoulder to the floor.
-Plain, seamless warm studio backdrop in a soft neutral tone that flatters the saree's colours (peach, beige or cream), with a gentle floor shadow.
+  Catalogue: `Create a premium e-commerce catalogue photograph of the EXACT saree shown in the reference photos, draped on a standing shop mannequin: a beige torso form with a slim arm hanging down on one side and the other arm bent at the elbow, and a turned wooden finial on top of the neck instead of a head (no human model, no face).
+Show the finished drape the way a saree shop displays it: the pallu comes over the shoulder as a wide diagonal band across the chest with its border running along both edges, the saree's front is gathered into neat, evenly spaced pleats falling straight to the floor, and the rest of the pallu hangs from the bent arm in a long folded panel so its border, stripes and woven design are clearly visible, spreading onto the floor at the bottom right. The saree's bottom border shows along the hem.
+Tall portrait framing, mannequin standing upright and centred in a slight three-quarter view, the ENTIRE mannequin must be inside the frame with clear empty margin above the wooden finial and below the hem and fallen pallu: nothing cropped or cut off at any edge.
+Plain, seamless warm studio backdrop in a soft golden-yellow, saffron or peach tone chosen to make the saree's colours stand out, with a gentle floor shadow.
 ${FIDELITY_RULES}`,
 } as const;
 
