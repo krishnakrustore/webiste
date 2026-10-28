@@ -1,6 +1,9 @@
 {
   "name": "kgbk-server",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "version": "0.1.0",
   "type": "module",
   "scripts": {
