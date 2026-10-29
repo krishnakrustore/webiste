@@ -36,7 +36,8 @@ if (process.argv.includes("--dry")) process.exit(0);
 
 let copied = 0;
 const failed: string[] = [];
-const queue = [...todo];
+const limit = Number(process.argv.find((a) => a.startsWith("--limit="))?.slice(8)) || todo.length;
+const queue = todo.slice(0, limit);
 await Promise.all(
   Array.from({ length: 3 }, async () => {
     for (let p = queue.shift(); p; p = queue.shift()) {
