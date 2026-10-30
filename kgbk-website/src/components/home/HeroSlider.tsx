@@ -3,16 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBanners } from "../../hooks/useContent";
-import ban1 from "../../assets/banners/ban1.png";
-import ban2 from "../../assets/banners/ban2.png";
-import ban3 from "../../assets/banners/ban3.png";
+import bannerA from "../../assets/banners/banner-a.jpg";
+import bannerB from "../../assets/banners/banner-b.jpg";
 
 // Fallback slides shown until Admin > Banners has at least one active
 // banner -- keeps the hero from ever being empty.
 const FALLBACK_SLIDES = [
-  { src: ban1, to: "/collection", alt: "Everyday collection" },
-  { src: ban2, to: "/collection?occasion=Wedding", alt: "Wedding collection" },
-  { src: ban3, to: "/collection/silk-collection", alt: "Silk collection" },
+  { src: bannerA, to: "/collection", alt: "Krishna Gari Battala Kottu -- silk sarees and fine fabrics" },
+  { src: bannerB, to: "/collection?occasion=Wedding", alt: "Krishna Gari Battala Kottu -- sarees for every occasion" },
 ];
 
 const AUTO_MS = 6500;
@@ -39,13 +37,13 @@ export default function HeroSlider() {
   }, [next]);
 
   if (loading) {
-    return <section className="w-full h-[62vh] sm:h-[76vh] max-h-[680px] min-h-[420px] bg-charcoal animate-pulse" />;
+    return <section className="w-full aspect-[2/1] bg-charcoal animate-pulse" />;
   }
 
   const slide = slides[index];
 
   return (
-    <section className="relative w-full overflow-hidden bg-charcoal h-[62vh] sm:h-[76vh] max-h-[680px] min-h-[420px]">
+    <section className="relative w-full overflow-hidden bg-charcoal aspect-[2/1]">
       <AnimatePresence mode="sync">
         <motion.div
           key={index}
@@ -59,7 +57,7 @@ export default function HeroSlider() {
             <img
               src={slide.src}
               alt={slide.alt}
-              className="absolute inset-0 w-full h-full object-cover object-left sm:object-center"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </Link>
         </motion.div>

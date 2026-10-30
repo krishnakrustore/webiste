@@ -195,10 +195,11 @@ async function processGroup(groupId: string) {
       ]);
       await deleteUnusedAssets(existing.images.map((i) => i.src), images.map((i) => i.src));
     } else if (listing) {
-      const product = await withUniqueSlug(listing.name, (slug) => prisma.product.create({
+      const product = await withUniqueSlug(listing.name, (slug, sku) => prisma.product.create({
         data: {
           name: listing.name,
           slug,
+          sku,
           category: listing.category,
           subcategory: listing.subcategory,
           occasion: listing.occasion,

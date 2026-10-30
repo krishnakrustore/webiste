@@ -17,6 +17,7 @@ export interface BusinessConfig {
     landmark: string;
   };
   mapsUrl: string;
+  mapEmbedUrl: string;
   instagram: string;
   facebook: string;
   hours: { days: string; time: string }[];
@@ -26,12 +27,12 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   name: "Krishna Gari Battala Kottu",
   legalName: "Krishna Gari Battala Kottu",
   tagline: "Fine Fabrics & Sarees",
-  // TODO: replace with the client's real WhatsApp number (country code + number, digits only)
-  whatsapp: "919999999999",
-  phone: "+91 99999 99999",
+  // Every WhatsApp button and enquiry on the site goes to this number (country code + number, digits only).
+  whatsapp: "917661935846",
+  phone: "+91 76619 35846",
   email: "hello@krishnagaribattalakottu.in",
   address: {
-    line1: "Plot 490/1, Road No. 10",
+    line1: "8-2-293/82/a/490, 1, Road Number 10",
     line2: "Jubilee Hills",
     city: "Hyderabad",
     state: "Telangana",
@@ -39,7 +40,11 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     country: "India",
     landmark: "Near Peddamma Temple",
   },
-  mapsUrl: "https://maps.app.goo.gl/ee5cBikLtATmgJgKA",
+  mapsUrl: "https://share.google/oV74u6NwkbZNIdxJL",
+  mapEmbedUrl:
+    "https://www.google.com/maps?q=" +
+    encodeURIComponent("Krishna Gari Battala Kottu, 8-2-293/82/a/490, Road Number 10, Jubilee Hills, Hyderabad, Telangana 500033") +
+    "&output=embed",
   instagram: "",
   facebook: "",
   hours: [
@@ -53,11 +58,12 @@ export function buildWhatsAppLink(message: string): string {
   return `https://wa.me/${BUSINESS_CONFIG.whatsapp}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildProductEnquiryMessage(params: { name: string; url: string }): string {
+export function buildProductEnquiryMessage(params: { name: string; url: string; sku?: string | null }): string {
   return [
     `Hello ${BUSINESS_CONFIG.name},`,
     ``,
     `I am interested in: ${params.name}`,
+    ...(params.sku ? [`Product code: ${params.sku}`] : []),
     params.url,
     ``,
     `Please share the price, availability and more details.`,

@@ -46,7 +46,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
         </button>
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400 z-10">
           <a
-            href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, url: `${window.location.origin}${href}` }))}
+            href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, sku: product.sku, url: `${window.location.origin}${href}` }))}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-wine text-ivory text-[12px] py-2.5 font-medium hover:bg-wine-dark transition-colors"
@@ -62,6 +62,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
               {product.name}
             </p>
             <p className="text-xs text-charcoal/50 mt-1">{product.material}</p>
+            {product.sku && <p className="text-[11px] tracking-[0.14em] uppercase text-charcoal/40 mt-1">{product.sku}</p>}
           </div>
           <ArrowUpRight size={15} className="mt-1 text-gold shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </div>

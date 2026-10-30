@@ -176,10 +176,10 @@ async function seedSettings() {
     create: {
       id: "singleton",
       businessName: "Krishna Gari Battala Kottu",
-      phone: "+91 99999 99999",
-      whatsapp: "919999999999",
-      addressLine: "Plot 490/1, Road No. 10, Jubilee Hills, Hyderabad - 500033",
-      mapsUrl: "https://maps.app.goo.gl/ee5cBikLtATmgJgKA",
+      phone: "+91 76619 35846",
+      whatsapp: "917661935846",
+      addressLine: "8-2-293/82/a/490, 1, Road Number 10, Jubilee Hills, Hyderabad, Telangana 500033",
+      mapsUrl: "https://share.google/oV74u6NwkbZNIdxJL",
       instagram: "",
       facebook: "",
       // Left at 0 deliberately -- set your real Google Business Profile

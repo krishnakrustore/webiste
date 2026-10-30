@@ -14,6 +14,8 @@
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx src/seed.ts",
     "recrop-zooms": "tsx src/recropZooms.ts",
+    "assign-skus": "tsx src/assignSkus.ts",
+    "backup": "node scripts/backup.mjs",
     "push-to-production": "tsx src/pushToProduction.ts",
     "db:local": "node scripts/local-db.mjs"
   },

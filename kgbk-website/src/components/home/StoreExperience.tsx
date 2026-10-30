@@ -15,7 +15,7 @@ export default function StoreExperience() {
         >
           <iframe
             title="Krishna Gari Battala Kottu location"
-            src="https://www.google.com/maps?q=Jubilee+Hills+Peddamma+Temple+Hyderabad&output=embed"
+            src={BUSINESS_CONFIG.mapEmbedUrl}
             className="absolute inset-0 w-full h-full border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

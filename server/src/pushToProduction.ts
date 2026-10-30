@@ -65,4 +65,22 @@ await Promise.all(
   })
 );
 console.log(`\nCopied ${copied}. Failed ${failed.length}.${failed.length ? " Run the command again to retry those." : ""}`);
+// Make product codes (SKUs) on the live site identical to the ones here.
+let synced = 0;
+const clashes: string[] = [];
+const toSync = mine.filter((p) => p.sku && done[p.id]);
+await Promise.all(
+  Array.from({ length: 5 }, async () => {
+    for (let p = toSync.shift(); p; p = toSync.shift()) {
+      const res = await fetch(`${api}/products/${done[p.id]}/sku`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ sku: p.sku }),
+      });
+      if (res.ok) synced++;
+      else clashes.push(`${p.sku} (${p.name})`);
+    }
+  })
+);
+console.log(`Product codes synced: ${synced}.${clashes.length ? ` Could not set ${clashes.length}: ${clashes.slice(0, 5).join(", ")}` : ""}`);
 await prisma.$disconnect();

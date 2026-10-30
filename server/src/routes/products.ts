@@ -1,6 +1,7 @@
 import { Router, type Request } from "express";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { nextSku } from "../utils/sku.js";
 import { prisma } from "../db.js";
 import { slugify } from "../utils/slugify.js";
 import { requireAdmin, isAdminRequest } from "../middleware/auth.js";
@@ -72,13 +73,13 @@ export async function uniqueSlug(name: string, excludeId?: string): Promise<stri
  * (e.g. bulk import generating two "Red Banarasi Silk Saree"s in parallel) can both see a slug
  * as free, so a slug collision is retried with the next suffix.
  */
-export async function withUniqueSlug<T>(name: string, write: (slug: string) => Promise<T>, excludeId?: string): Promise<T> {
+export async function withUniqueSlug<T>(name: string, write: (slug: string, sku: string) => Promise<T>, excludeId?: string): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     const slug = await uniqueSlug(name, excludeId);
     try {
-      return await write(slug);
+      return await write(slug, await nextSku());
     } catch (err) {
-      const slugClash = err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002" && String(err.meta?.target).includes("slug");
+      const slugClash = err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002" && /slug|sku/.test(String(err.meta?.target));
       if (!slugClash || attempt >= 5) throw err;
     }
   }
@@ -105,7 +106,7 @@ productsRouter.get("/", async (req, res) => {
   if (featured === "true") where.featured = true;
   if (q) {
     const contains = isPostgres() ? { contains: q, mode: "insensitive" } : { contains: q };
-    where.OR = ["name", "material", "color", "subcategory", "category"].map((field) => ({ [field]: contains }));
+    where.OR = ["name", "sku", "material", "color", "subcategory", "category"].map((field) => ({ [field]: contains }));
   }
   const products = await prisma.product.findMany({ where, include: { images: true }, orderBy: { createdAt: "desc" } });
   res.json(products.map((p) => serializeProduct(req, p)));
@@ -130,9 +131,9 @@ productsRouter.post("/", requireAdmin, async (req, res) => {
 
   try {
     const stored = await storeImages(images);
-    const product = await withUniqueSlug(data.name, (slug) =>
+    const product = await withUniqueSlug(data.name, (slug, sku) =>
       prisma.product.create({
-        data: { ...data, slug, sku: data.sku || null, images: { create: stored } },
+        data: { ...data, slug, sku: data.sku || sku, images: { create: stored } },
         include: { images: true },
       })
     );
@@ -160,7 +161,7 @@ productsRouter.put("/:id", requireAdmin, async (req, res) => {
       await tx.productImage.deleteMany({ where: { productId: existing.id } });
       return tx.product.update({
         where: { id: existing.id },
-        data: { ...data, slug, sku: data.sku || null, images: { create: stored } },
+        data: { ...data, slug, sku: data.sku || existing.sku || (await nextSku()), images: { create: stored } },
         include: { images: true },
       });
     });
@@ -168,6 +169,20 @@ productsRouter.put("/:id", requireAdmin, async (req, res) => {
     res.json(serializeProduct(req, product));
   } catch (err) {
     if (err instanceof ImageValidationError) return res.status(400).json({ error: err.message });
+    throw err;
+  }
+});
+
+// Sets only the product code (used by `npm run push-to-production` to keep codes identical on the live site).
+productsRouter.patch("/:id/sku", requireAdmin, async (req, res) => {
+  const sku = String(req.body?.sku ?? "").trim();
+  if (!sku) return res.status(400).json({ error: "Enter a product code" });
+  try {
+    await prisma.product.update({ where: { id: req.params.id }, data: { sku } });
+    res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return res.status(409).json({ error: "That product code is already used" });
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") return res.status(404).json({ error: "Product not found" });
     throw err;
   }
 });

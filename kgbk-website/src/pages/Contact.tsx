@@ -59,7 +59,7 @@ export default function Contact() {
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }} className="rounded-sm overflow-hidden aspect-[4/3] md:aspect-auto md:h-full md:min-h-[320px] min-w-0">
           <iframe
             title="Krishna Gari Battala Kottu location"
-            src="https://www.google.com/maps?q=Jubilee+Hills+Peddamma+Temple+Hyderabad&output=embed"
+            src={BUSINESS_CONFIG.mapEmbedUrl}
             className="w-full h-full border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

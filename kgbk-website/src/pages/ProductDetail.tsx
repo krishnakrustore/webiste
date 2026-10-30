@@ -135,6 +135,7 @@ export default function ProductDetail() {
             <ShareButton title={product.name} />
           </div>
           <h1 className="font-display text-3xl md:text-4xl leading-tight mb-3">{product.name}</h1>
+          {product.sku && <p className="text-xs tracking-[0.18em] uppercase text-charcoal/55 mb-3">Product code: <span className="font-medium text-charcoal/80">{product.sku}</span></p>}
           <p className={`text-xs inline-block px-2.5 py-1 rounded-full ${product.availability === "Available" ? "bg-green-800/10 text-green-800" : "bg-charcoal/10 text-charcoal/60"}`}>
             {product.availability}
           </p>
@@ -152,7 +153,7 @@ export default function ProductDetail() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="mb-8">
             <div className="flex flex-wrap items-center gap-3">
               <a
-                href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, url: canonical ?? window.location.href }))}
+                href={buildWhatsAppLink(buildProductEnquiryMessage({ name: product.name, sku: product.sku, url: canonical ?? window.location.href }))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] text-white px-8 py-4 text-sm font-medium hover:brightness-95 transition"
